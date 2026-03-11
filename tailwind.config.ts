@@ -62,8 +62,8 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         eden: {
-          green: "hsl(var(--eden-green))",
-          "green-light": "hsl(var(--eden-green-light))",
+          pink: "hsl(var(--eden-pink))",
+          "pink-light": "hsl(var(--eden-pink-light))",
           gold: "hsl(var(--eden-gold))",
           "gold-light": "hsl(var(--eden-gold-light))",
           earth: "hsl(var(--eden-earth))",

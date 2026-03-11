@@ -6,6 +6,12 @@ export interface User {
   city: string;
   avatar: string;
   createdAt: string;
+  role?: 'entreprise' | 'particulier';
+  companyName?: string;
+  pseudo?: string;
+  gender?: 'homme' | 'femme' | 'autre';
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface Ad {
@@ -25,6 +31,8 @@ export interface Ad {
   views: number;
   createdAt: string;
   updatedAt: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface Message {
@@ -92,6 +100,25 @@ export const CONGO_CITIES = [
   "Ewo",
   "Loandjili",
 ] as const;
+
+// Coordinates for Congo cities (for map)
+export const CITY_COORDS: Record<string, [number, number]> = {
+  "Brazzaville": [-4.2634, 15.2429],
+  "Pointe-Noire": [-4.7692, 11.8664],
+  "Dolisie": [-4.1986, 12.6668],
+  "Nkayi": [-4.1744, 13.2847],
+  "Ouesso": [1.6138, 16.0517],
+  "Owando": [-0.4864, 15.8997],
+  "Impfondo": [1.6180, 18.0596],
+  "Madingou": [-4.1536, 13.5500],
+  "Sibiti": [-3.6833, 13.3500],
+  "Kinkala": [-4.3614, 14.7644],
+  "Mossendjo": [-2.9500, 12.7000],
+  "Gamboma": [-1.8764, 15.8644],
+  "Djambala": [-2.5439, 14.7536],
+  "Ewo": [-0.8728, 14.8203],
+  "Loandjili": [-4.7560, 11.8580],
+};
 
 export const CATEGORIES = [
   { id: "vehicules", name: "Véhicules", icon: "🚗", count: 0 },
