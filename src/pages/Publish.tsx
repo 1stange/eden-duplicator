@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ads as adsStorage } from "@/lib/localStorage";
 import { CATEGORIES, CONGO_CITIES } from "@/types";
-import { ArrowLeft, ImagePlus, Send } from "lucide-react";
+import { ArrowLeft, ImagePlus, Send, X, Camera } from "lucide-react";
 
 export default function Publish() {
   const navigate = useNavigate();
@@ -16,8 +16,30 @@ export default function Publish() {
   const [isPremium, setIsPremium] = useState(false);
   const [isUrgent, setIsUrgent] = useState(false);
   const [error, setError] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) return null;
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      if (images.length >= 5) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          setImages((prev) => prev.length < 5 ? [...prev, ev.target!.result as string] : prev);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +48,7 @@ export default function Publish() {
       setError("Veuillez remplir tous les champs obligatoires.");
       return;
     }
+    const adImages = images.length > 0 ? images : ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600"];
     adsStorage.create({
       title,
       description,
@@ -33,7 +56,7 @@ export default function Publish() {
       currency: "FCFA",
       category,
       city,
-      images: ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600"],
+      images: adImages,
       userId: user.id,
       userName: user.name,
       userPhone: user.phone,
@@ -54,6 +77,34 @@ export default function Publish() {
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Images upload */}
+        <div className="eden-card p-4">
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Camera className="h-4 w-4 text-primary" /> Photos ({images.length}/5)
+          </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {images.map((img, i) => (
+              <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
+                <img src={img} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                <button type="button" onClick={() => removeImage(i)} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {images.length < 5 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-square rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
+              >
+                <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground">Ajouter</span>
+              </button>
+            )}
+          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+        </div>
+
         <div className="eden-card p-4 space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Titre *</label>

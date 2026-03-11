@@ -1,6 +1,5 @@
 import { Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings, PlusCircle, LogOut, Leaf } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifications as notifStorage, messages as msgStorage } from "@/lib/localStorage";
 import {
@@ -37,7 +36,6 @@ const moreItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
   const { user, logout } = useAuth();
 
   const unreadMsgs = user ? msgStorage.getUnreadCount(user.id) : 0;
@@ -49,7 +47,7 @@ export function AppSidebar() {
         <SidebarMenuButton asChild>
           <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50 relative" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
             <item.icon className="mr-2 h-4 w-4 shrink-0" />
-            {!collapsed && <span>{item.title}</span>}
+            {!collapsed && <span className="truncate">{item.title}</span>}
             {!collapsed && item.url === "/messages" && unreadMsgs > 0 && (
               <span className="ml-auto eden-badge-premium text-[10px] px-1.5 min-w-[18px] text-center">{unreadMsgs}</span>
             )}
@@ -64,9 +62,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarContent className="py-4">
-        {/* Logo */}
         <div className={`flex items-center gap-2 px-4 mb-6 ${collapsed ? "justify-center" : ""}`}>
-          <div className="w-8 h-8 rounded-lg eden-gradient flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg eden-gradient flex items-center justify-center shrink-0">
             <Leaf className="h-4 w-4 text-primary-foreground" />
           </div>
           {!collapsed && <span className="text-lg font-display font-bold text-sidebar-foreground">Eden</span>}
@@ -100,12 +97,12 @@ export function AppSidebar() {
             <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent shrink-0" />
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.pseudo || user.name}</p>
                 <p className="text-xs text-sidebar-foreground/50 truncate">{user.city}</p>
               </div>
             )}
             {!collapsed && (
-              <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors" title="Déconnexion">
+              <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors shrink-0" title="Déconnexion">
                 <LogOut className="h-4 w-4" />
               </button>
             )}
