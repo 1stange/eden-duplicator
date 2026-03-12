@@ -1,23 +1,11 @@
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { settings as settingsStorage } from "@/lib/localStorage";
-import { CONGO_CITIES } from "@/types";
-import { Settings as SettingsIcon, User, Bell, Globe, Palette, Save, RotateCcw } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Settings as SettingsIcon, Bell, Globe, Palette, Moon, Sun, RotateCcw } from "lucide-react";
 
 export default function Settings() {
-  const { user, updateUser } = useAuth();
   const [appSettings, setAppSettings] = useState(settingsStorage.get());
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [phone, setPhone] = useState(user?.phone || "");
-  const [city, setCity] = useState(user?.city || "Brazzaville");
-  const [saved, setSaved] = useState(false);
-
-  const saveProfile = () => {
-    updateUser({ name, email, phone, city });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const updateSetting = (key: string, value: unknown) => {
     const updated = settingsStorage.update({ [key]: value });
@@ -35,43 +23,29 @@ export default function Settings() {
         <SettingsIcon className="h-6 w-6 text-primary" /> Paramètres
       </h1>
 
-      {/* Profile */}
-      <div className="eden-card p-4 mb-4">
-        <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <User className="h-4 w-4 text-primary" /> Profil
-        </h2>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Nom complet</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="eden-input" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="eden-input" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Téléphone</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="eden-input" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Ville</label>
-            <select value={city} onChange={(e) => setCity(e.target.value)} className="eden-input">
-              {CONGO_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <button onClick={saveProfile} className="eden-btn-primary">
-            <Save className="h-4 w-4 mr-2" /> Enregistrer
-          </button>
-          {saved && <p className="text-sm text-eden-success">Profil mis à jour !</p>}
-        </div>
-      </div>
-
-      {/* App Settings */}
       <div className="eden-card p-4 mb-4">
         <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" /> Préférences
         </h2>
         <div className="space-y-4">
+          {/* Dark Mode Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {theme === "dark" ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-accent" />}
+              <div>
+                <p className="text-sm font-medium text-foreground">Mode sombre</p>
+                <p className="text-xs text-muted-foreground">{theme === "dark" ? "Activé" : "Désactivé"}</p>
+              </div>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className={`w-11 h-6 rounded-full transition-colors relative ${theme === "dark" ? "bg-primary" : "bg-muted"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-md transition-transform ${theme === "dark" ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {/* Notifications */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground">Notifications</p>

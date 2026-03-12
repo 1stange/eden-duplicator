@@ -1,18 +1,11 @@
-import { Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings, PlusCircle, LogOut, Leaf } from "lucide-react";
+import { Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings, PlusCircle, LogOut, Leaf, UserCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { notifications as notifStorage, messages as msgStorage } from "@/lib/localStorage";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
 const mainItems = [
@@ -37,6 +30,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const unreadMsgs = user ? msgStorage.getUnreadCount(user.id) : 0;
   const unreadNotifs = user ? notifStorage.getUnreadCount(user.id) : 0;
@@ -71,35 +65,34 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(mainItems)}</SidebarMenu>
-          </SidebarGroupContent>
+          <SidebarGroupContent><SidebarMenu>{renderItems(mainItems)}</SidebarMenu></SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Personnel</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(personalItems)}</SidebarMenu>
-          </SidebarGroupContent>
+          <SidebarGroupContent><SidebarMenu>{renderItems(personalItems)}</SidebarMenu></SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Plus</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(moreItems)}</SidebarMenu>
-          </SidebarGroupContent>
+          <SidebarGroupContent><SidebarMenu>{renderItems(moreItems)}</SidebarMenu></SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         {user && (
           <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-            <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent shrink-0" />
+            <button onClick={() => navigate("/profile")} className="shrink-0 group relative">
+              <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent object-cover" />
+              <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <UserCircle className="h-4 w-4 text-white" />
+              </div>
+            </button>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
+              <button onClick={() => navigate("/profile")} className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">{user.pseudo || user.name}</p>
                 <p className="text-xs text-sidebar-foreground/50 truncate">{user.city}</p>
-              </div>
+              </button>
             )}
             {!collapsed && (
               <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors shrink-0" title="Déconnexion">
