@@ -12,6 +12,7 @@ export interface User {
   gender?: 'homme' | 'femme' | 'autre';
   firstName?: string;
   lastName?: string;
+  birthDate?: string;
 }
 
 export interface Ad {
@@ -35,10 +36,21 @@ export interface Ad {
   lng?: number;
 }
 
+export interface Review {
+  id: string;
+  adId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   senderId: string;
   senderName: string;
+  senderAvatar?: string;
   receiverId: string;
   receiverName: string;
   adId: string;
@@ -101,7 +113,6 @@ export const CONGO_CITIES = [
   "Loandjili",
 ] as const;
 
-// Coordinates for Congo cities (for map)
 export const CITY_COORDS: Record<string, [number, number]> = {
   "Brazzaville": [-4.2634, 15.2429],
   "Pointe-Noire": [-4.7692, 11.8664],
@@ -121,16 +132,7 @@ export const CITY_COORDS: Record<string, [number, number]> = {
 };
 
 export const CATEGORIES = [
-  { id: "vehicules", name: "Véhicules", icon: "🚗", count: 0 },
-  { id: "immobilier", name: "Immobilier", icon: "🏠", count: 0 },
-  { id: "electronique", name: "Électronique", icon: "📱", count: 0 },
-  { id: "mode", name: "Mode & Vêtements", icon: "👗", count: 0 },
-  { id: "maison", name: "Maison & Jardin", icon: "🪴", count: 0 },
-  { id: "emploi", name: "Emploi", icon: "💼", count: 0 },
-  { id: "services", name: "Services", icon: "🔧", count: 0 },
-  { id: "loisirs", name: "Loisirs & Sports", icon: "⚽", count: 0 },
-  { id: "alimentation", name: "Alimentation", icon: "🍽️", count: 0 },
-  { id: "education", name: "Éducation", icon: "📚", count: 0 },
-  { id: "sante", name: "Santé & Beauté", icon: "💊", count: 0 },
-  { id: "animaux", name: "Animaux", icon: "🐕", count: 0 },
+  { id: "rencontres", name: "Rencontres", icon: "💕", count: 0 },
+  { id: "escortes-massages", name: "Escortes + Massages", icon: "💆", count: 0 },
+  { id: "produits-adultes", name: "Produits adultes", icon: "🔞", count: 0 },
 ] as const;

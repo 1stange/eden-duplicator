@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppLayout } from "@/components/Layout/AppLayout";
+import { hasSeenWelcome } from "@/lib/localStorage";
+import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import SearchPage from "./pages/Search";
@@ -25,7 +27,14 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) return <Auth />;
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="*" element={hasSeenWelcome() ? <Auth /> : <Welcome />} />
+      </Routes>
+    );
+  }
 
   return (
     <AppLayout>
