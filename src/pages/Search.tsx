@@ -156,14 +156,10 @@ export default function SearchPage() {
       {viewMode === "map" && (
         <div className="eden-card overflow-hidden mb-4 rounded-xl" style={{ height: "400px" }}>
           <MapContainer
-            center={[-2.5, 15.0]}
-            zoom={5}
-            style={{ height: "100%", width: "100%" }}
-            scrollWheelZoom={true}
+            {...{ center: [-2.5, 15.0] as [number, number], zoom: 5, style: { height: "100%", width: "100%" }, scrollWheelZoom: true } as any}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              {...{ attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" } as any}
             />
             {Object.entries(adsByCity).map(([cityName, cityAds]) => {
               const coords = CITY_COORDS[cityName];
