@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ads as adsStorage, favorites as favStorage, history as histStorage, messages as msgStorage } from "@/lib/localStorage";
+import { ads as adsStorage, favorites as favStorage, history as histStorage, messages as msgStorage, reviews as revStorage } from "@/lib/localStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import { Ad } from "@/types";
-import { ArrowLeft, Heart, Share2, MapPin, Eye, Clock, Phone, MessageSquare, User, Send } from "lucide-react";
+import { ArrowLeft, Heart, Share2, MapPin, Eye, Clock, Phone, MessageSquare, User, Send, Star } from "lucide-react";
 
 function formatPrice(price: number, currency: string) {
   if (price === 0) return "Gratuit";
@@ -18,12 +18,17 @@ export default function AdDetails() {
   const [isFav, setIsFav] = useState(false);
   const [message, setMessage] = useState("");
   const [msgSent, setMsgSent] = useState(false);
+  const [adReviews, setAdReviews] = useState(id ? revStorage.getForAd(id) : []);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [reviewSent, setReviewSent] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     const found = adsStorage.getById(id);
     setAd(found);
     setIsFav(favStorage.isFavorite(id));
+    setAdReviews(revStorage.getForAd(id));
     if (found) {
       adsStorage.incrementViews(id);
       if (user) {
@@ -38,31 +43,32 @@ export default function AdDetails() {
     </div>
   );
 
-  const toggleFav = () => {
-    favStorage.toggle(ad.id);
-    setIsFav(!isFav);
-  };
+  const toggleFav = () => { favStorage.toggle(ad.id); setIsFav(!isFav); };
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !message.trim()) return;
-    msgStorage.send({
-      senderId: user.id,
-      senderName: user.name,
-      receiverId: ad.userId,
-      receiverName: ad.userName,
-      adId: ad.id,
-      adTitle: ad.title,
-      content: message.trim(),
-    });
+    msgStorage.send({ senderId: user.id, senderName: user.name, receiverId: ad.userId, receiverName: ad.userName, adId: ad.id, adTitle: ad.title, content: message.trim() });
     setMessage("");
     setMsgSent(true);
     setTimeout(() => setMsgSent(false), 3000);
   };
 
+  const submitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newComment.trim()) return;
+    revStorage.add({ adId: ad.id, userId: user.id, userName: user.pseudo || user.name, rating: newRating, comment: newComment.trim() });
+    setAdReviews(revStorage.getForAd(ad.id));
+    setNewComment("");
+    setNewRating(5);
+    setReviewSent(true);
+    setTimeout(() => setReviewSent(false), 3000);
+  };
+
+  const avgRating = revStorage.getAverageRating(ad.id);
+
   return (
     <div className="max-w-4xl mx-auto p-4 animate-fade-in">
-      {/* Header */}
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Retour
       </button>
@@ -90,6 +96,18 @@ export default function AdDetails() {
           <span className="eden-badge-category mb-2">{ad.category}</span>
           <h1 className="text-xl md:text-2xl font-display font-bold text-foreground mt-2">{ad.title}</h1>
           <p className="text-2xl md:text-3xl font-bold text-primary mt-3">{formatPrice(ad.price, ad.currency)}</p>
+
+          {/* Rating summary */}
+          {adReviews.length > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex">
+                {[1,2,3,4,5].map((s) => (
+                  <Star key={s} className={`h-4 w-4 ${s <= Math.round(avgRating) ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                ))}
+              </div>
+              <span className="text-sm text-muted-foreground">{avgRating.toFixed(1)} ({adReviews.length} avis)</span>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-3 mt-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{ad.city}</span>
@@ -126,18 +144,66 @@ export default function AdDetails() {
               </h3>
               {msgSent && <p className="text-sm text-eden-success mb-2">Message envoyé !</p>}
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Votre message..."
-                  className="eden-input flex-1"
-                />
-                <button type="submit" className="eden-btn-primary px-3">
-                  <Send className="h-4 w-4" />
-                </button>
+                <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Votre message..." className="eden-input flex-1" />
+                <button type="submit" className="eden-btn-primary px-3"><Send className="h-4 w-4" /></button>
               </div>
             </form>
+          )}
+        </div>
+      </div>
+
+      {/* Reviews section */}
+      <div className="mt-8">
+        <h2 className="eden-section-title mb-4 flex items-center gap-2">
+          <Star className="h-5 w-5 text-accent" /> Avis ({adReviews.length})
+        </h2>
+
+        {/* Add review */}
+        {user && user.id !== ad.userId && (
+          <form onSubmit={submitReview} className="eden-card p-4 mb-4">
+            {reviewSent && <p className="text-sm text-eden-success mb-2">Avis publié !</p>}
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-medium text-foreground">Votre note :</span>
+              <div className="flex">
+                {[1,2,3,4,5].map((s) => (
+                  <button key={s} type="button" onClick={() => setNewRating(s)}>
+                    <Star className={`h-6 w-6 transition-colors ${s <= newRating ? "fill-accent text-accent" : "text-muted-foreground/30 hover:text-accent/50"}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Votre avis..." className="eden-input flex-1" />
+              <button type="submit" className="eden-btn-primary px-4">Publier</button>
+            </div>
+          </form>
+        )}
+
+        {/* Reviews list */}
+        <div className="space-y-3">
+          {adReviews.map((review) => (
+            <div key={review.id} className="eden-card p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                    <User className="h-4 w-4 text-secondary-foreground" />
+                  </div>
+                  <span className="font-medium text-sm text-foreground">{review.userName}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1,2,3,4,5].map((s) => (
+                    <Star key={s} className={`h-3.5 w-3.5 ${s <= review.rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                  ))}
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">{review.comment}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-2">
+                {new Date(review.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            </div>
+          ))}
+          {adReviews.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">Aucun avis pour le moment</p>
           )}
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { Ad, User, Message, Notification, HistoryEntry, AppSettings } from "@/types";
-import { sampleAds, sampleUsers, sampleMessages, sampleNotifications } from "./seedData";
+import { Ad, User, Message, Notification, HistoryEntry, AppSettings, Review } from "@/types";
+import { sampleAds, sampleUsers, sampleMessages, sampleNotifications, sampleReviews } from "./seedData";
 
 const KEYS = {
   USER: "eden_current_user",
@@ -10,7 +10,9 @@ const KEYS = {
   NOTIFICATIONS: "eden_notifications",
   HISTORY: "eden_history",
   SETTINGS: "eden_settings",
-  INITIALIZED: "eden_initialized",
+  REVIEWS: "eden_reviews",
+  INITIALIZED: "eden_initialized_v2",
+  WELCOME_SEEN: "eden_welcome_seen",
 };
 
 function get<T>(key: string, fallback: T): T {
@@ -32,6 +34,7 @@ export function initializeData() {
     set(KEYS.ADS, sampleAds);
     set(KEYS.MESSAGES, sampleMessages);
     set(KEYS.NOTIFICATIONS, sampleNotifications);
+    set(KEYS.REVIEWS, sampleReviews);
     set(KEYS.FAVORITES, []);
     set(KEYS.HISTORY, []);
     set(KEYS.SETTINGS, { notifications: true, language: "fr", currency: "FCFA", theme: "light" });
@@ -39,36 +42,32 @@ export function initializeData() {
   }
 }
 
+export function hasSeenWelcome(): boolean {
+  return localStorage.getItem(KEYS.WELCOME_SEEN) === "true";
+}
+
+export function setWelcomeSeen() {
+  localStorage.setItem(KEYS.WELCOME_SEEN, "true");
+}
+
 // Auth
 export const auth = {
   login(email: string, password: string): User | null {
     const users = get<User[]>(KEYS.USERS, []);
     const user = users.find((u) => u.email === email);
-    if (user) {
-      set(KEYS.USER, user);
-      return user;
-    }
+    if (user) { set(KEYS.USER, user); return user; }
     return null;
   },
   signup(data: Omit<User, "id" | "createdAt" | "avatar">): User {
     const users = get<User[]>(KEYS.USERS, []);
-    const newUser: User = {
-      ...data,
-      id: `user-${Date.now()}`,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    const newUser: User = { ...data, id: `user-${Date.now()}`, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`, createdAt: new Date().toISOString().split("T")[0] };
     users.push(newUser);
     set(KEYS.USERS, users);
     set(KEYS.USER, newUser);
     return newUser;
   },
-  logout() {
-    localStorage.removeItem(KEYS.USER);
-  },
-  getCurrentUser(): User | null {
-    return get<User | null>(KEYS.USER, null);
-  },
+  logout() { localStorage.removeItem(KEYS.USER); },
+  getCurrentUser(): User | null { return get<User | null>(KEYS.USER, null); },
   updateUser(updates: Partial<User>): User | null {
     const user = this.getCurrentUser();
     if (!user) return null;
@@ -106,16 +105,10 @@ export const ads = {
     set(KEYS.ADS, filtered);
     return filtered.length < all.length;
   },
-  incrementViews(id: string) {
-    const ad = this.getById(id);
-    if (ad) this.update(id, { views: ad.views + 1 });
-  },
+  incrementViews(id: string) { const ad = this.getById(id); if (ad) this.update(id, { views: ad.views + 1 }); },
   search(query: string, filters?: { category?: string; city?: string; minPrice?: number; maxPrice?: number }): Ad[] {
     let results = this.getAll();
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter((a) => a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q));
-    }
+    if (query) { const q = query.toLowerCase(); results = results.filter((a) => a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q)); }
     if (filters?.category) results = results.filter((a) => a.category === filters.category);
     if (filters?.city) results = results.filter((a) => a.city === filters.city);
     if (filters?.minPrice) results = results.filter((a) => a.price >= filters.minPrice!);
@@ -144,11 +137,7 @@ export const messages = {
     set(KEYS.MESSAGES, all);
     return newMsg;
   },
-  markAsRead(id: string) {
-    const all = this.getAll();
-    const msg = all.find((m) => m.id === id);
-    if (msg) { msg.read = true; set(KEYS.MESSAGES, all); }
-  },
+  markAsRead(id: string) { const all = this.getAll(); const msg = all.find((m) => m.id === id); if (msg) { msg.read = true; set(KEYS.MESSAGES, all); } },
   getUnreadCount(userId: string): number { return this.getAll().filter((m) => m.receiverId === userId && !m.read).length; },
 };
 
@@ -163,16 +152,8 @@ export const notifications = {
     set(KEYS.NOTIFICATIONS, all);
     return n;
   },
-  markAsRead(id: string) {
-    const all = this.getAll();
-    const n = all.find((x) => x.id === id);
-    if (n) { n.read = true; set(KEYS.NOTIFICATIONS, all); }
-  },
-  markAllAsRead(userId: string) {
-    const all = this.getAll();
-    all.forEach((n) => { if (n.userId === userId) n.read = true; });
-    set(KEYS.NOTIFICATIONS, all);
-  },
+  markAsRead(id: string) { const all = this.getAll(); const n = all.find((x) => x.id === id); if (n) { n.read = true; set(KEYS.NOTIFICATIONS, all); } },
+  markAllAsRead(userId: string) { const all = this.getAll(); all.forEach((n) => { if (n.userId === userId) n.read = true; }); set(KEYS.NOTIFICATIONS, all); },
   getUnreadCount(userId: string): number { return this.getAll().filter((n) => n.userId === userId && !n.read).length; },
 };
 
@@ -187,6 +168,24 @@ export const history = {
     set(KEYS.HISTORY, all);
   },
   clear(userId: string) { set(KEYS.HISTORY, this.getAll().filter((h) => h.userId !== userId)); },
+};
+
+// Reviews
+export const reviews = {
+  getAll(): Review[] { return get<Review[]>(KEYS.REVIEWS, []); },
+  getForAd(adId: string): Review[] { return this.getAll().filter((r) => r.adId === adId); },
+  add(review: Omit<Review, "id" | "createdAt">): Review {
+    const all = this.getAll();
+    const r: Review = { ...review, id: `rev-${Date.now()}`, createdAt: new Date().toISOString() };
+    all.unshift(r);
+    set(KEYS.REVIEWS, all);
+    return r;
+  },
+  getAverageRating(adId: string): number {
+    const adReviews = this.getForAd(adId);
+    if (adReviews.length === 0) return 0;
+    return adReviews.reduce((sum, r) => sum + r.rating, 0) / adReviews.length;
+  },
 };
 
 // Settings

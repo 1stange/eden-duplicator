@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { CONGO_CITIES } from "@/types";
-import { Leaf, Eye, EyeOff, ArrowRight, ArrowLeft, Check, Building2, User as UserIcon, ShieldCheck } from "lucide-react";
+import { Leaf, Eye, EyeOff, ArrowRight, ArrowLeft, Check, Building2, User as UserIcon, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type AuthMode = "login" | "signup" | "forgot";
@@ -18,7 +18,7 @@ export default function Auth() {
 
   // Multi-step signup state
   const [step, setStep] = useState<SignupStep>("age");
-  const [isAdult, setIsAdult] = useState<boolean | null>(null);
+  const [birthDate, setBirthDate] = useState("");
   const [role, setRole] = useState<"entreprise" | "particulier" | "">("");
   const [companyName, setCompanyName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -27,6 +27,16 @@ export default function Auth() {
   const [city, setCity] = useState("Brazzaville");
   const [gender, setGender] = useState<"homme" | "femme" | "autre" | "">("");
   const [phone, setPhone] = useState("");
+
+  const isAdult = (): boolean => {
+    if (!birthDate) return false;
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 18;
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +52,7 @@ export default function Auth() {
 
   const resetSignup = () => {
     setStep("age");
-    setIsAdult(null);
+    setBirthDate("");
     setRole("");
     setCompanyName("");
     setFirstName("");
@@ -59,7 +69,8 @@ export default function Auth() {
   const nextStep = () => {
     setError("");
     if (step === "age") {
-      if (!isAdult) { setError("Vous devez être majeur pour vous inscrire."); return; }
+      if (!birthDate) { setError("Veuillez entrer votre date de naissance."); return; }
+      if (!isAdult()) { setError("Vous devez avoir au moins 18 ans pour vous inscrire."); return; }
       setStep("role");
     } else if (step === "role") {
       if (!role) { setError("Veuillez choisir votre profil."); return; }
@@ -97,6 +108,7 @@ export default function Auth() {
       gender: gender as "homme" | "femme" | "autre",
       firstName,
       lastName,
+      birthDate,
     });
   };
 
@@ -133,7 +145,7 @@ export default function Auth() {
               <Leaf className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="text-3xl font-display font-bold text-foreground">Eden</h1>
-            <p className="text-muted-foreground mt-1">Petites annonces du Congo</p>
+            <p className="text-muted-foreground mt-1">Plateforme pour adultes - Congo 🇨🇬</p>
           </div>
 
           <div className="eden-card p-6">
@@ -186,20 +198,26 @@ export default function Auth() {
                   {step === "age" && (
                     <motion.div key="age" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }} className="space-y-4">
                       <div className="text-center">
-                        <ShieldCheck className="h-12 w-12 text-primary mx-auto mb-3" />
+                        <Calendar className="h-12 w-12 text-primary mx-auto mb-3" />
                         <h3 className="text-lg font-display font-semibold text-foreground mb-1">Vérification d'âge</h3>
-                        <p className="text-sm text-muted-foreground">Êtes-vous majeur(e) (18 ans ou plus) ?</p>
+                        <p className="text-sm text-muted-foreground">Vous devez avoir au moins 18 ans</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button type="button" onClick={() => setIsAdult(true)}
-                          className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${isAdult === true ? "border-primary bg-primary/10 text-primary" : "border-input hover:border-primary/50"}`}>
-                          ✅ Oui, je suis majeur(e)
-                        </button>
-                        <button type="button" onClick={() => setIsAdult(false)}
-                          className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${isAdult === false ? "border-destructive bg-destructive/10 text-destructive" : "border-input hover:border-destructive/50"}`}>
-                          ❌ Non
-                        </button>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">Date de naissance *</label>
+                        <input
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          max={new Date().toISOString().split("T")[0]}
+                          className="eden-input"
+                          required
+                        />
                       </div>
+                      {birthDate && (
+                        <div className={`p-3 rounded-lg text-sm ${isAdult() ? "bg-eden-success/10 text-eden-success" : "bg-destructive/10 text-destructive"}`}>
+                          {isAdult() ? "✅ Vous êtes majeur(e). Vous pouvez continuer." : "❌ Vous devez avoir au moins 18 ans pour vous inscrire."}
+                        </div>
+                      )}
                       <button type="button" onClick={nextStep} className="eden-btn-primary w-full flex items-center justify-center gap-2">
                         Continuer <ArrowRight className="h-4 w-4" />
                       </button>
@@ -243,7 +261,7 @@ export default function Auth() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Nom de l'entreprise *</label>
-                        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ex: Boulangerie Mbongo" className="eden-input" />
+                        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ex: Spa Beauté Congo" className="eden-input" />
                       </div>
                       <div className="flex gap-2">
                         <button type="button" onClick={prevStep} className="flex-1 py-2.5 rounded-lg border border-input text-sm font-medium hover:bg-muted transition-colors flex items-center justify-center gap-1">
@@ -322,7 +340,7 @@ export default function Auth() {
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.cg" className="eden-input" required />
                 </div>
-                <button type="submit" className="eden-btn-primary w-full">Envoyer le lien</button>
+                <button type="submit" className="eden-btn-primary w-full">Envoyer</button>
                 <button type="button" onClick={() => setMode("login")} className="w-full text-sm text-primary hover:underline">Retour à la connexion</button>
               </form>
             )}
