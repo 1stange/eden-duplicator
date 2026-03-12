@@ -101,7 +101,7 @@ export default function Profile() {
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Genre</label>
-            <select value={gender} onChange={(e) => setGender(e.target.value)} className="eden-input">
+            <select value={gender} onChange={(e) => setGender(e.target.value as 'homme' | 'femme' | 'autre')} className="eden-input">
               <option value="homme">Homme</option>
               <option value="femme">Femme</option>
               <option value="autre">Autre</option>
