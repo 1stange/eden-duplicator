@@ -1,13 +1,12 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ads as adsStorage, favorites as favStorage } from "@/lib/localStorage";
+import { useAds, useFavorites, useToggleFavorite } from "@/hooks/useSupabaseData";
 import { CATEGORIES, CONGO_CITIES, CITY_COORDS } from "@/types";
 import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -24,127 +23,84 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
-
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
   const [city, setCity] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc">("recent");
-  const [favs, setFavs] = useState<string[]>(favStorage.getAll());
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
+  const { data: allAds = [] } = useAds({ category: category || undefined, city: city || undefined, query: query || undefined });
+  const { data: favs = [] } = useFavorites();
+  const toggleFavMut = useToggleFavorite();
+
   const results = useMemo(() => {
-    let res = adsStorage.search(query, {
-      category: category || undefined,
-      city: city || undefined,
-    });
-    if (sortBy === "price-asc") res.sort((a, b) => a.price - b.price);
-    if (sortBy === "price-desc") res.sort((a, b) => b.price - a.price);
+    let res = [...allAds];
+    if (sortBy === "price-asc") res.sort((a: any, b: any) => a.price - b.price);
+    if (sortBy === "price-desc") res.sort((a: any, b: any) => b.price - a.price);
     return res;
-  }, [query, category, city, sortBy]);
+  }, [allAds, sortBy]);
 
-  const toggleFav = (adId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    favStorage.toggle(adId);
-    setFavs(favStorage.getAll());
-  };
-
+  const toggleFav = (adId: string, e: React.MouseEvent) => { e.stopPropagation(); toggleFavMut.mutate(adId); };
   const activeFilters = [category, city].filter(Boolean).length;
 
-  // Group ads by city for map markers
   const adsByCity = useMemo(() => {
-    const map: Record<string, typeof results> = {};
-    results.forEach((ad) => {
-      if (!map[ad.city]) map[ad.city] = [];
-      map[ad.city].push(ad);
-    });
+    const map: Record<string, any[]> = {};
+    results.forEach((ad: any) => { if (!map[ad.city]) map[ad.city] = []; map[ad.city].push(ad); });
     return map;
   }, [results]);
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      {/* Search Bar */}
       <div className="flex gap-2 mb-4">
         <div className="flex-1 relative">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher une annonce..."
-            className="eden-input pl-10"
-          />
-          {query && (
-            <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
-          )}
+          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher une annonce..." className="eden-input pl-10" />
+          {query && <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="h-4 w-4 text-muted-foreground" /></button>}
         </div>
-        <button
-          onClick={() => setViewMode(viewMode === "list" ? "map" : "list")}
-          className="px-3 rounded-lg border border-input hover:bg-muted transition-colors flex items-center gap-1.5 text-sm"
-          title={viewMode === "list" ? "Vue carte" : "Vue liste"}
-        >
+        <button onClick={() => setViewMode(viewMode === "list" ? "map" : "list")} className="px-3 rounded-lg border border-input hover:bg-muted transition-colors flex items-center gap-1.5 text-sm">
           {viewMode === "list" ? <MapIcon className="h-4 w-4" /> : <List className="h-4 w-4" />}
         </button>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`px-3 rounded-lg border transition-colors flex items-center gap-1.5 text-sm ${showFilters ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}
-        >
+        <button onClick={() => setShowFilters(!showFilters)} className={`px-3 rounded-lg border transition-colors flex items-center gap-1.5 text-sm ${showFilters ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-muted"}`}>
           <SlidersHorizontal className="h-4 w-4" />
           {activeFilters > 0 && <span className="eden-badge-premium text-[10px] px-1">{activeFilters}</span>}
         </button>
       </div>
 
-      {/* Filters */}
       {showFilters && (
         <div className="eden-card p-4 mb-4 animate-fade-in space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Catégorie</label>
               <select value={category} onChange={(e) => setCategory(e.target.value)} className="eden-input text-sm">
-                <option value="">Toutes les catégories</option>
+                <option value="">Toutes</option>
                 {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Ville</label>
               <select value={city} onChange={(e) => setCity(e.target.value)} className="eden-input text-sm">
-                <option value="">Toutes les villes</option>
+                <option value="">Toutes</option>
                 {CONGO_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Tri</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="eden-input text-sm">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="eden-input text-sm">
                 <option value="recent">Plus récents</option>
                 <option value="price-asc">Prix croissant</option>
                 <option value="price-desc">Prix décroissant</option>
               </select>
             </div>
           </div>
-          {activeFilters > 0 && (
-            <button onClick={() => { setCategory(""); setCity(""); }} className="text-xs text-primary hover:underline">
-              Effacer les filtres
-            </button>
-          )}
+          {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); }} className="text-xs text-primary hover:underline">Effacer les filtres</button>}
         </div>
       )}
 
-      {/* Category pills */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 pb-1">
-        <button
-          onClick={() => setCategory("")}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${!category ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-        >
-          Tout
-        </button>
+        <button onClick={() => setCategory("")} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${!category ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>Tout</button>
         {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setCategory(c.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${category === c.id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-          >
+          <button key={c.id} onClick={() => setCategory(c.id)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${category === c.id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
             {c.icon} {c.name}
           </button>
         ))}
@@ -152,15 +108,10 @@ export default function SearchPage() {
 
       <p className="text-sm text-muted-foreground mb-3">{results.length} résultat{results.length > 1 ? "s" : ""}</p>
 
-      {/* Map View */}
       {viewMode === "map" && (
         <div className="eden-card overflow-hidden mb-4 rounded-xl" style={{ height: "400px" }}>
-          <MapContainer
-            {...{ center: [-2.5, 15.0] as [number, number], zoom: 5, style: { height: "100%", width: "100%" }, scrollWheelZoom: true } as any}
-          >
-            <TileLayer
-              {...{ attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" } as any}
-            />
+          <MapContainer {...{ center: [-2.5, 15.0] as [number, number], zoom: 5, style: { height: "100%", width: "100%" }, scrollWheelZoom: true } as any}>
+            <TileLayer {...{ attribution: '&copy; OpenStreetMap', url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" } as any} />
             {Object.entries(adsByCity).map(([cityName, cityAds]) => {
               const coords = CITY_COORDS[cityName];
               if (!coords) return null;
@@ -169,22 +120,13 @@ export default function SearchPage() {
                   <Popup>
                     <div className="min-w-[180px]">
                       <p className="font-bold text-sm mb-1">{cityName}</p>
-                      <p className="text-xs text-muted-foreground mb-2">{cityAds.length} annonce{cityAds.length > 1 ? "s" : ""}</p>
-                      {cityAds.slice(0, 3).map((ad) => (
-                        <div
-                          key={ad.id}
-                          onClick={() => navigate(`/ad/${ad.id}`)}
-                          className="cursor-pointer hover:bg-muted p-1 rounded text-xs mb-1"
-                        >
+                      <p className="text-xs mb-2">{cityAds.length} annonce{cityAds.length > 1 ? "s" : ""}</p>
+                      {cityAds.slice(0, 3).map((ad: any) => (
+                        <div key={ad.id} onClick={() => navigate(`/ad/${ad.id}`)} className="cursor-pointer hover:bg-muted p-1 rounded text-xs mb-1">
                           <span className="font-medium">{ad.title}</span>
                           <span className="block text-primary font-bold">{formatPrice(ad.price, ad.currency)}</span>
                         </div>
                       ))}
-                      {cityAds.length > 3 && (
-                        <button onClick={() => setCity(cityName)} className="text-xs text-primary hover:underline mt-1">
-                          Voir les {cityAds.length} annonces →
-                        </button>
-                      )}
                     </div>
                   </Popup>
                 </Marker>
@@ -194,15 +136,14 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* List View */}
       {viewMode === "list" && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {results.map((ad) => (
+          {results.map((ad: any) => (
             <div key={ad.id} onClick={() => navigate(`/ad/${ad.id}`)} className="eden-card cursor-pointer overflow-hidden group">
               <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={ad.images[0]} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                {ad.isPremium && <span className="absolute top-2 left-2 eden-badge-premium text-[10px]">⭐ Premium</span>}
-                {ad.isUrgent && <span className="absolute top-2 left-2 eden-badge bg-destructive text-destructive-foreground text-[10px]">🔥 Urgent</span>}
+                <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                {ad.is_premium && <span className="absolute top-2 left-2 eden-badge-premium text-[10px]">⭐ Premium</span>}
+                {ad.is_urgent && <span className="absolute top-2 left-2 eden-badge bg-destructive text-destructive-foreground text-[10px]">🔥 Urgent</span>}
                 <button onClick={(e) => toggleFav(ad.id, e)} className="absolute top-2 right-2 p-1.5 rounded-full bg-card/80 backdrop-blur-sm">
                   <Heart className={`h-3.5 w-3.5 ${favs.includes(ad.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                 </button>

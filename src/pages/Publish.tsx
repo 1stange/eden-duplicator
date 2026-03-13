@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ads as adsStorage } from "@/lib/localStorage";
+import { useCreateAd } from "@/hooks/useSupabaseData";
 import { CATEGORIES, CONGO_CITIES } from "@/types";
 import { ArrowLeft, ImagePlus, Send, X, Camera } from "lucide-react";
 
 export default function Publish() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const createAd = useCreateAd();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -28,42 +29,28 @@ export default function Publish() {
       if (images.length >= 5) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        if (ev.target?.result) {
-          setImages((prev) => prev.length < 5 ? [...prev, ev.target!.result as string] : prev);
-        }
+        if (ev.target?.result) setImages((prev) => prev.length < 5 ? [...prev, ev.target!.result as string] : prev);
       };
       reader.readAsDataURL(file);
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeImage = (idx: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!title || !description || !category) {
-      setError("Veuillez remplir tous les champs obligatoires.");
-      return;
-    }
+    if (!title || !description || !category) { setError("Veuillez remplir tous les champs obligatoires."); return; }
     const adImages = images.length > 0 ? images : ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600"];
-    adsStorage.create({
-      title,
-      description,
-      price: Number(price) || 0,
-      currency: "FCFA",
-      category,
-      city,
-      images: adImages,
-      userId: user.id,
-      userName: user.name,
-      userPhone: user.phone,
-      isPremium,
-      isUrgent,
-    });
-    navigate("/");
+    try {
+      await createAd.mutateAsync({
+        title, description, price: Number(price) || 0, currency: "FCFA", category, city,
+        images: adImages, user_id: user.id, user_name: user.pseudo || user.name, user_phone: user.phone,
+        is_premium: isPremium, is_urgent: isUrgent,
+      });
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la publication.");
+    }
   };
 
   return (
@@ -71,34 +58,24 @@ export default function Publish() {
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Retour
       </button>
-
       <h1 className="eden-section-title mb-6">Publier une annonce</h1>
-
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Images upload */}
         <div className="eden-card p-4">
-          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Camera className="h-4 w-4 text-primary" /> Photos ({images.length}/5)
-          </h3>
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Photos ({images.length}/5)</h3>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {images.map((img, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
                 <img src={img} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => removeImage(i)} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
+                <button type="button" onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
                   <X className="h-3 w-3" />
                 </button>
               </div>
             ))}
             {images.length < 5 && (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="aspect-square rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
-              >
-                <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground">Ajouter</span>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors">
+                <ImagePlus className="h-5 w-5 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">Ajouter</span>
               </button>
             )}
           </div>
@@ -108,11 +85,11 @@ export default function Publish() {
         <div className="eden-card p-4 space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Titre *</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: iPhone 14 Pro Max" className="eden-input" required />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Massage relaxant..." className="eden-input" required />
           </div>
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Description *</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez votre annonce en détail..." className="eden-input min-h-[100px] resize-y" required />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez votre annonce..." className="eden-input min-h-[100px] resize-y" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -136,27 +113,21 @@ export default function Publish() {
         </div>
 
         <div className="eden-card p-4">
-          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><ImagePlus className="h-4 w-4 text-primary" /> Options</h3>
+          <h3 className="font-semibold text-foreground mb-3">Options</h3>
           <div className="space-y-3">
             <label className="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" checked={isPremium} onChange={(e) => setIsPremium(e.target.checked)} className="w-4 h-4 rounded border-input accent-accent" />
-              <div>
-                <p className="text-sm font-medium text-foreground">⭐ Annonce Premium</p>
-                <p className="text-xs text-muted-foreground">Mise en avant dans la page d'accueil</p>
-              </div>
+              <div><p className="text-sm font-medium text-foreground">⭐ Premium</p><p className="text-xs text-muted-foreground">Mise en avant</p></div>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" checked={isUrgent} onChange={(e) => setIsUrgent(e.target.checked)} className="w-4 h-4 rounded border-input accent-destructive" />
-              <div>
-                <p className="text-sm font-medium text-foreground">🔥 Urgent</p>
-                <p className="text-xs text-muted-foreground">Signaler comme urgent</p>
-              </div>
+              <div><p className="text-sm font-medium text-foreground">🔥 Urgent</p><p className="text-xs text-muted-foreground">Signaler comme urgent</p></div>
             </label>
           </div>
         </div>
 
-        <button type="submit" className="eden-btn-primary w-full">
-          <Send className="h-4 w-4 mr-2" /> Publier l'annonce
+        <button type="submit" disabled={createAd.isPending} className="eden-btn-primary w-full disabled:opacity-50">
+          <Send className="h-4 w-4 mr-2" /> {createAd.isPending ? "Publication..." : "Publier l'annonce"}
         </button>
       </form>
     </div>

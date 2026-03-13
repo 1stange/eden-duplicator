@@ -1,8 +1,7 @@
-import { Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings, PlusCircle, LogOut, Leaf, UserCircle } from "lucide-react";
+import { Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings, PlusCircle, LogOut, Leaf, UserCircle, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { notifications as notifStorage, messages as msgStorage } from "@/lib/localStorage";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -29,11 +28,8 @@ const moreItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-
-  const unreadMsgs = user ? msgStorage.getUnreadCount(user.id) : 0;
-  const unreadNotifs = user ? notifStorage.getUnreadCount(user.id) : 0;
 
   const renderItems = (items: typeof mainItems) =>
     items.map((item) => (
@@ -42,12 +38,6 @@ export function AppSidebar() {
           <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50 relative" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
             <item.icon className="mr-2 h-4 w-4 shrink-0" />
             {!collapsed && <span className="truncate">{item.title}</span>}
-            {!collapsed && item.url === "/messages" && unreadMsgs > 0 && (
-              <span className="ml-auto eden-badge-premium text-[10px] px-1.5 min-w-[18px] text-center">{unreadMsgs}</span>
-            )}
-            {!collapsed && item.url === "/notifications" && unreadNotifs > 0 && (
-              <span className="ml-auto eden-badge-premium text-[10px] px-1.5 min-w-[18px] text-center">{unreadNotifs}</span>
-            )}
           </NavLink>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -77,13 +67,31 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Plus</SidebarGroupLabel>
           <SidebarGroupContent><SidebarMenu>{renderItems(moreItems)}</SidebarMenu></SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/admin" className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                      <Shield className="mr-2 h-4 w-4 shrink-0 text-destructive" />
+                      {!collapsed && <span className="truncate">Modération</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         {user && (
           <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
             <button onClick={() => navigate("/profile")} className="shrink-0 group relative">
-              <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent object-cover" />
+              <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent object-cover" />
               <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <UserCircle className="h-4 w-4 text-white" />
               </div>
@@ -95,7 +103,7 @@ export function AppSidebar() {
               </button>
             )}
             {!collapsed && (
-              <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors shrink-0" title="Déconnexion">
+              <button onClick={() => logout()} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors shrink-0" title="Déconnexion">
                 <LogOut className="h-4 w-4" />
               </button>
             )}

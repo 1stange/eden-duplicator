@@ -14,6 +14,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
 
   // Multi-step signup state
@@ -38,32 +39,24 @@ export default function Auth() {
     return age >= 18;
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const user = login(email, password);
-    if (!user) setError("Email ou mot de passe incorrect.");
+    setLoading(true);
+    const result = await login(email, password);
+    if (result.error) setError(result.error);
+    setLoading(false);
   };
 
   const handleForgot = (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess("Un lien de réinitialisation a été envoyé (simulation locale).");
+    setSuccess("Un lien de réinitialisation a été envoyé à votre email.");
   };
 
   const resetSignup = () => {
-    setStep("age");
-    setBirthDate("");
-    setRole("");
-    setCompanyName("");
-    setFirstName("");
-    setLastName("");
-    setPseudo("");
-    setCity("Brazzaville");
-    setGender("");
-    setPhone("");
-    setPassword("");
-    setEmail("");
-    setError("");
+    setStep("age"); setBirthDate(""); setRole(""); setCompanyName("");
+    setFirstName(""); setLastName(""); setPseudo(""); setCity("Brazzaville");
+    setGender(""); setPhone(""); setPassword(""); setEmail(""); setError("");
   };
 
   const nextStep = () => {
@@ -74,8 +67,7 @@ export default function Auth() {
       setStep("role");
     } else if (step === "role") {
       if (!role) { setError("Veuillez choisir votre profil."); return; }
-      if (role === "entreprise") setStep("company");
-      else setStep("info");
+      if (role === "entreprise") setStep("company"); else setStep("info");
     } else if (step === "company") {
       if (!companyName.trim()) { setError("Veuillez entrer le nom de votre entreprise."); return; }
       setStep("info");
@@ -89,27 +81,25 @@ export default function Auth() {
     else if (step === "info") setStep(role === "entreprise" ? "company" : "role");
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!lastName || !firstName || !email || !phone || !password || !gender) {
-      setError("Veuillez remplir tous les champs obligatoires.");
-      return;
+      setError("Veuillez remplir tous les champs obligatoires."); return;
     }
-    const name = `${firstName} ${lastName}`;
-    signup({
-      name,
-      email,
-      phone,
-      city,
-      role: role as "entreprise" | "particulier",
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères."); return;
+    }
+    setLoading(true);
+    const result = await signup({
+      email, password, name: `${firstName} ${lastName}`,
+      phone, city, role: role as string,
       companyName: role === "entreprise" ? companyName : undefined,
-      pseudo: pseudo || undefined,
-      gender: gender as "homme" | "femme" | "autre",
-      firstName,
-      lastName,
-      birthDate,
+      pseudo: pseudo || undefined, gender: gender as string,
+      firstName, lastName, birthDate,
     });
+    if (result.error) setError(result.error);
+    setLoading(false);
   };
 
   const stepIndicator = () => {
@@ -129,17 +119,12 @@ export default function Auth() {
     );
   };
 
-  const slideVariants = {
-    enter: { x: 40, opacity: 0 },
-    center: { x: 0, opacity: 1 },
-    exit: { x: -40, opacity: 0 },
-  };
+  const slideVariants = { enter: { x: 40, opacity: 0 }, center: { x: 0, opacity: 1 }, exit: { x: -40, opacity: 0 } };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-2xl eden-gradient flex items-center justify-center mb-4 shadow-lg">
               <Leaf className="h-8 w-8 text-primary-foreground" />
@@ -149,14 +134,10 @@ export default function Auth() {
           </div>
 
           <div className="eden-card p-6">
-            {/* Tabs */}
             <div className="flex gap-1 mb-6 bg-muted rounded-lg p-1">
               {(["login", "signup"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => { setMode(m); setError(""); setSuccess(""); if (m === "signup") resetSignup(); }}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === m ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
-                >
+                <button key={m} onClick={() => { setMode(m); setError(""); setSuccess(""); if (m === "signup") resetSignup(); }}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === m ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
                   {m === "login" ? "Connexion" : "Inscription"}
                 </button>
               ))}
@@ -180,14 +161,10 @@ export default function Auth() {
                     </button>
                   </div>
                 </div>
-                <button type="submit" className="eden-btn-primary w-full">Se connecter</button>
+                <button type="submit" disabled={loading} className="eden-btn-primary w-full disabled:opacity-50">
+                  {loading ? "Connexion..." : "Se connecter"}
+                </button>
                 <button type="button" onClick={() => setMode("forgot")} className="w-full text-sm text-primary hover:underline">Mot de passe oublié ?</button>
-                <div className="mt-4 p-3 rounded-lg bg-muted text-xs text-muted-foreground">
-                  <p className="font-medium mb-1">Comptes de test :</p>
-                  <p>jc.mboko@eden.cg</p>
-                  <p>marie.l@eden.cg</p>
-                  <p className="mt-1 italic">N'importe quel mot de passe</p>
-                </div>
               </form>
             )}
 
@@ -204,18 +181,11 @@ export default function Auth() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Date de naissance *</label>
-                        <input
-                          type="date"
-                          value={birthDate}
-                          onChange={(e) => setBirthDate(e.target.value)}
-                          max={new Date().toISOString().split("T")[0]}
-                          className="eden-input"
-                          required
-                        />
+                        <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} max={new Date().toISOString().split("T")[0]} className="eden-input" required />
                       </div>
                       {birthDate && (
                         <div className={`p-3 rounded-lg text-sm ${isAdult() ? "bg-eden-success/10 text-eden-success" : "bg-destructive/10 text-destructive"}`}>
-                          {isAdult() ? "✅ Vous êtes majeur(e). Vous pouvez continuer." : "❌ Vous devez avoir au moins 18 ans pour vous inscrire."}
+                          {isAdult() ? "✅ Vous êtes majeur(e). Vous pouvez continuer." : "❌ Vous devez avoir au moins 18 ans."}
                         </div>
                       )}
                       <button type="button" onClick={nextStep} className="eden-btn-primary w-full flex items-center justify-center gap-2">
@@ -228,7 +198,6 @@ export default function Auth() {
                     <motion.div key="role" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }} className="space-y-4">
                       <div className="text-center mb-2">
                         <h3 className="text-lg font-display font-semibold text-foreground">Quel est votre profil ?</h3>
-                        <p className="text-sm text-muted-foreground">Choisissez le type de compte</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <button type="button" onClick={() => setRole("entreprise")}
@@ -239,7 +208,7 @@ export default function Auth() {
                         <button type="button" onClick={() => setRole("particulier")}
                           className={`p-5 rounded-xl border-2 text-center transition-all flex flex-col items-center gap-2 ${role === "particulier" ? "border-primary bg-primary/10" : "border-input hover:border-primary/50"}`}>
                           <UserIcon className={`h-8 w-8 ${role === "particulier" ? "text-primary" : "text-muted-foreground"}`} />
-                          <span className="font-medium text-sm">Particulier / Client</span>
+                          <span className="font-medium text-sm">Particulier</span>
                         </button>
                       </div>
                       <div className="flex gap-2">
@@ -324,7 +293,9 @@ export default function Auth() {
                           <button type="button" onClick={prevStep} className="flex-1 py-2.5 rounded-lg border border-input text-sm font-medium hover:bg-muted transition-colors flex items-center justify-center gap-1">
                             <ArrowLeft className="h-4 w-4" /> Retour
                           </button>
-                          <button type="submit" className="flex-1 eden-btn-primary">Créer mon compte</button>
+                          <button type="submit" disabled={loading} className="flex-1 eden-btn-primary disabled:opacity-50">
+                            {loading ? "Création..." : "Créer mon compte"}
+                          </button>
                         </div>
                       </form>
                     </motion.div>
