@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { notifications as notifStorage } from "@/lib/localStorage";
+import { useNotifications, useMarkNotifRead, useMarkAllNotifsRead } from "@/hooks/useSupabaseData";
 import { Bell, Check, CheckCheck, Info, MessageSquare, AlertTriangle, ShoppingBag } from "lucide-react";
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -13,21 +12,12 @@ const typeIcons: Record<string, React.ReactNode> = {
 
 export default function Notifications() {
   const { user } = useAuth();
-  const [notifs, setNotifs] = useState(user ? notifStorage.getForUser(user.id) : []);
+  const { data: notifs = [] } = useNotifications();
+  const markRead = useMarkNotifRead();
+  const markAllRead = useMarkAllNotifsRead();
 
   if (!user) return null;
-
-  const markAllRead = () => {
-    notifStorage.markAllAsRead(user.id);
-    setNotifs(notifStorage.getForUser(user.id));
-  };
-
-  const markRead = (id: string) => {
-    notifStorage.markAsRead(id);
-    setNotifs(notifStorage.getForUser(user.id));
-  };
-
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  const unreadCount = notifs.filter((n: any) => !n.read).length;
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -37,7 +27,7 @@ export default function Notifications() {
           <p className="text-sm text-muted-foreground">{unreadCount} non lue{unreadCount > 1 ? "s" : ""}</p>
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="text-sm text-primary hover:underline flex items-center gap-1">
+          <button onClick={() => markAllRead.mutate()} className="text-sm text-primary hover:underline flex items-center gap-1">
             <CheckCheck className="h-4 w-4" /> Tout marquer lu
           </button>
         )}
@@ -50,12 +40,9 @@ export default function Notifications() {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifs.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => markRead(n.id)}
-              className={`w-full text-left eden-card p-4 transition-all ${!n.read ? "border-primary/20 bg-primary/5" : "opacity-70"}`}
-            >
+          {notifs.map((n: any) => (
+            <button key={n.id} onClick={() => markRead.mutate(n.id)}
+              className={`w-full text-left eden-card p-4 transition-all ${!n.read ? "border-primary/20 bg-primary/5" : "opacity-70"}`}>
               <div className="flex gap-3">
                 <div className="mt-0.5">{typeIcons[n.type] || typeIcons.info}</div>
                 <div className="flex-1 min-w-0">
@@ -64,7 +51,7 @@ export default function Notifications() {
                     {!n.read && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.createdAt).toLocaleDateString("fr-FR")}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleDateString("fr-FR")}</p>
                 </div>
               </div>
             </button>

@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { favorites as favStorage, ads as adsStorage } from "@/lib/localStorage";
+import { useFavoriteAds, useToggleFavorite } from "@/hooks/useSupabaseData";
 import { Heart, MapPin, Eye, Trash2 } from "lucide-react";
 
 function formatPrice(price: number, currency: string) {
@@ -10,13 +9,12 @@ function formatPrice(price: number, currency: string) {
 
 export default function Favorites() {
   const navigate = useNavigate();
-  const [favIds, setFavIds] = useState(favStorage.getAll());
-  const favAds = favIds.map((id) => adsStorage.getById(id)).filter(Boolean);
+  const { data: favAds = [] } = useFavoriteAds();
+  const toggleFav = useToggleFavorite();
 
   const removeFav = (adId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    favStorage.remove(adId);
-    setFavIds(favStorage.getAll());
+    toggleFav.mutate(adId);
   };
 
   return (
@@ -32,10 +30,10 @@ export default function Favorites() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {favAds.map((ad) => ad && (
+          {favAds.map((ad: any) => (
             <div key={ad.id} onClick={() => navigate(`/ad/${ad.id}`)} className="eden-card cursor-pointer overflow-hidden group">
               <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={ad.images[0]} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <button onClick={(e) => removeFav(ad.id, e)} className="absolute top-2 right-2 p-1.5 rounded-full bg-card/80 backdrop-blur-sm">
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </button>

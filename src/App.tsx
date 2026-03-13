@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppLayout } from "@/components/Layout/AppLayout";
-import { hasSeenWelcome } from "@/lib/localStorage";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
@@ -20,18 +19,32 @@ import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Publish from "./pages/Publish";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-xl eden-gradient flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-2xl">🌿</span>
+          </div>
+          <p className="text-muted-foreground text-sm">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
       <Routes>
         <Route path="/welcome" element={<Welcome />} />
-        <Route path="*" element={hasSeenWelcome() ? <Auth /> : <Welcome />} />
+        <Route path="*" element={<Auth />} />
       </Routes>
     );
   }
@@ -50,6 +63,7 @@ function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/publish" element={<Publish />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>

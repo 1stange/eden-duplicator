@@ -4,12 +4,10 @@ import { AppSidebar } from "./AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { notifications as notifStorage } from "@/lib/localStorage";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const unreadNotifs = user ? notifStorage.getUnreadCount(user.id) : 0;
 
   return (
     <SidebarProvider>
@@ -24,9 +22,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </button>
             <button onClick={() => navigate("/notifications")} className="p-2 rounded-lg hover:bg-muted transition-colors relative">
               <Bell className="h-5 w-5 text-muted-foreground" />
-              {unreadNotifs > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent animate-pulse-gold" />
-              )}
             </button>
           </header>
           <main className="flex-1 overflow-auto">
