@@ -52,6 +52,7 @@ function AppRoutes() {
 
   return (
     <AppLayout>
+      <RealtimeNotifications />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/search" element={<SearchPage />} />
