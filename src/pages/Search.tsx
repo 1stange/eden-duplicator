@@ -150,6 +150,7 @@ export default function SearchPage() {
               </div>
               <div className="p-2.5 sm:p-3">
                 <h3 className="font-medium text-xs sm:text-sm text-foreground line-clamp-2">{ad.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{ad.description}</p>
                 <p className="text-primary font-bold text-xs sm:text-sm mt-1">{formatPrice(ad.price, ad.currency)}</p>
                 <div className="flex items-center justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{ad.city}</span>

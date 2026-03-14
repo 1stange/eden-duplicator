@@ -21,6 +21,7 @@ import Publish from "./pages/Publish";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { RealtimeNotifications } from "./components/RealtimeNotifications";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ function AppRoutes() {
 
   return (
     <AppLayout>
+      <RealtimeNotifications />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/search" element={<SearchPage />} />

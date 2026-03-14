@@ -31,6 +31,25 @@ export function useAd(id: string | undefined) {
   });
 }
 
+export function useSuggestedAds(currentAd: any) {
+  return useQuery({
+    queryKey: ["suggested-ads", currentAd?.id],
+    queryFn: async () => {
+      if (!currentAd) return [];
+      const { data } = await supabase
+        .from("ads")
+        .select("*")
+        .eq("status", "active")
+        .eq("category", currentAd.category)
+        .neq("id", currentAd.id)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      return data || [];
+    },
+    enabled: !!currentAd,
+  });
+}
+
 export function useUserAds() {
   const { user } = useAuth();
   return useQuery({
@@ -159,8 +178,6 @@ export function useSendMessage() {
   return useMutation({
     mutationFn: async ({ receiverId, adId, adTitle, content }: { receiverId: string; adId: string; adTitle: string; content: string }) => {
       if (!user) throw new Error("Not authenticated");
-      
-      // Find or create conversation
       const { data: existing } = await supabase
         .from("conversations")
         .select("id")
@@ -174,19 +191,14 @@ export function useSendMessage() {
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
       } else {
         const { data: newConv, error } = await supabase.from("conversations").insert({
-          participant_1: user.id,
-          participant_2: receiverId,
-          ad_id: adId,
-          ad_title: adTitle,
+          participant_1: user.id, participant_2: receiverId, ad_id: adId, ad_title: adTitle,
         }).select().single();
         if (error) throw error;
         conversationId = newConv.id;
       }
 
       const { data: msg, error } = await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content,
+        conversation_id: conversationId, sender_id: user.id, content,
       }).select().single();
       if (error) throw error;
       return msg;
@@ -206,9 +218,7 @@ export function useSendMessageInConversation() {
       if (!user) throw new Error("Not authenticated");
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
       const { data, error } = await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content,
+        conversation_id: conversationId, sender_id: user.id, content,
       }).select().single();
       if (error) throw error;
       return data;
@@ -292,9 +302,7 @@ export function useUpdateReport() {
       await supabase.from("reports").update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq("id", reportId);
       if (adStatus) {
         const { data: report } = await supabase.from("reports").select("ad_id").eq("id", reportId).single();
-        if (report) {
-          await supabase.from("ads").update({ status: adStatus }).eq("id", report.ad_id);
-        }
+        if (report) await supabase.from("ads").update({ status: adStatus }).eq("id", report.ad_id);
       }
     },
     onSuccess: () => {
@@ -386,6 +394,31 @@ export function useProfile(userId: string | undefined) {
       return data;
     },
     enabled: !!userId,
+  });
+}
+
+// ============ CERTIFICATION ============
+export function useCertifyUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, certified }: { userId: string; certified: boolean }) => {
+      const { error } = await supabase.from("profiles").update({ is_certified: certified } as any).eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all-profiles"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+}
+
+export function useAllProfiles() {
+  return useQuery({
+    queryKey: ["all-profiles"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      return data || [];
+    },
   });
 }
 

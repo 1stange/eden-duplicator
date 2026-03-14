@@ -32,6 +32,7 @@ export type Database = {
           user_id: string
           user_name: string
           user_phone: string | null
+          video: string | null
           views: number | null
         }
         Insert: {
@@ -51,6 +52,7 @@ export type Database = {
           user_id: string
           user_name: string
           user_phone?: string | null
+          video?: string | null
           views?: number | null
         }
         Update: {
@@ -70,6 +72,7 @@ export type Database = {
           user_id?: string
           user_name?: string
           user_phone?: string | null
+          video?: string | null
           views?: number | null
         }
         Relationships: [
@@ -309,6 +312,7 @@ export type Database = {
           first_name: string | null
           gender: string | null
           id: string
+          is_certified: boolean | null
           last_name: string | null
           name: string
           phone: string | null
@@ -325,6 +329,7 @@ export type Database = {
           first_name?: string | null
           gender?: string | null
           id: string
+          is_certified?: boolean | null
           last_name?: string | null
           name?: string
           phone?: string | null
@@ -341,6 +346,7 @@ export type Database = {
           first_name?: string | null
           gender?: string | null
           id?: string
+          is_certified?: boolean | null
           last_name?: string | null
           name?: string
           phone?: string | null

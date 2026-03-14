@@ -2,8 +2,9 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateAd } from "@/hooks/useSupabaseData";
+import { uploadAdMedia } from "@/lib/storage";
 import { CATEGORIES, CONGO_CITIES } from "@/types";
-import { ArrowLeft, ImagePlus, Send, X, Camera } from "lucide-react";
+import { ArrowLeft, ImagePlus, Send, X, Camera, Video } from "lucide-react";
 
 export default function Publish() {
   const navigate = useNavigate();
@@ -17,8 +18,11 @@ export default function Publish() {
   const [isPremium, setIsPremium] = useState(false);
   const [isUrgent, setIsUrgent] = useState(false);
   const [error, setError] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<{ file: File; preview: string }[]>([]);
+  const [videoFile, setVideoFile] = useState<{ file: File; preview: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) return null;
 
@@ -26,30 +30,53 @@ export default function Publish() {
     const files = e.target.files;
     if (!files) return;
     Array.from(files).forEach((file) => {
-      if (images.length >= 5) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) setImages((prev) => prev.length < 5 ? [...prev, ev.target!.result as string] : prev);
-      };
-      reader.readAsDataURL(file);
+      if (imageFiles.length >= 3) return;
+      const preview = URL.createObjectURL(file);
+      setImageFiles((prev) => prev.length < 3 ? [...prev, { file, preview }] : prev);
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { setError("La vidéo ne doit pas dépasser 50 Mo."); return; }
+    setVideoFile({ file, preview: URL.createObjectURL(file) });
+    if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!title || !description || !category) { setError("Veuillez remplir tous les champs obligatoires."); return; }
-    const adImages = images.length > 0 ? images : ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600"];
+
+    setUploading(true);
     try {
+      // Upload images to storage
+      const imageUrls: string[] = [];
+      for (const img of imageFiles) {
+        const url = await uploadAdMedia(user.id, img.file, "image");
+        if (url) imageUrls.push(url);
+      }
+
+      // Upload video if present
+      let videoUrl: string | null = null;
+      if (videoFile) {
+        videoUrl = await uploadAdMedia(user.id, videoFile.file, "video");
+      }
+
+      const adImages = imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600"];
+
       await createAd.mutateAsync({
         title, description, price: Number(price) || 0, currency: "FCFA", category, city,
-        images: adImages, user_id: user.id, user_name: user.pseudo || user.name, user_phone: user.phone,
+        images: adImages, video: videoUrl, user_id: user.id, user_name: user.pseudo || user.name, user_phone: user.phone,
         is_premium: isPremium, is_urgent: isUrgent,
       });
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Erreur lors de la publication.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -62,24 +89,44 @@ export default function Publish() {
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Photos */}
         <div className="eden-card p-4">
-          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Photos ({images.length}/5)</h3>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {images.map((img, i) => (
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Photos ({imageFiles.length}/3)</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {imageFiles.map((img, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
-                <img src={img} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
+                <img src={img.preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                <button type="button" onClick={() => setImageFiles((prev) => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
                   <X className="h-3 w-3" />
                 </button>
               </div>
             ))}
-            {images.length < 5 && (
+            {imageFiles.length < 3 && (
               <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors">
                 <ImagePlus className="h-5 w-5 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">Ajouter</span>
               </button>
             )}
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+        </div>
+
+        {/* Video */}
+        <div className="eden-card p-4">
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><Video className="h-4 w-4 text-primary" /> Vidéo ({videoFile ? "1" : "0"}/1)</h3>
+          {videoFile ? (
+            <div className="relative rounded-lg overflow-hidden border aspect-video">
+              <video src={videoFile.preview} controls className="w-full h-full object-cover" />
+              <button type="button" onClick={() => setVideoFile(null)} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => videoInputRef.current?.click()} className="w-full aspect-video rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-2 transition-colors">
+              <Video className="h-8 w-8 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Ajouter une vidéo (max 50 Mo)</span>
+            </button>
+          )}
+          <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
         </div>
 
         <div className="eden-card p-4 space-y-4">
@@ -126,8 +173,8 @@ export default function Publish() {
           </div>
         </div>
 
-        <button type="submit" disabled={createAd.isPending} className="eden-btn-primary w-full disabled:opacity-50">
-          <Send className="h-4 w-4 mr-2" /> {createAd.isPending ? "Publication..." : "Publier l'annonce"}
+        <button type="submit" disabled={uploading || createAd.isPending} className="eden-btn-primary w-full disabled:opacity-50">
+          <Send className="h-4 w-4 mr-2" /> {uploading ? "Upload en cours..." : createAd.isPending ? "Publication..." : "Publier l'annonce"}
         </button>
       </form>
     </div>
