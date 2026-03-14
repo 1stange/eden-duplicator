@@ -21,6 +21,7 @@ import Publish from "./pages/Publish";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { RealtimeNotifications } from "./components/RealtimeNotifications";
 
 const queryClient = new QueryClient();
 
