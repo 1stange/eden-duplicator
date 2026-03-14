@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadAvatar } from "@/lib/storage";
 import { CONGO_CITIES } from "@/types";
 import { motion } from "framer-motion";
-import { User, Camera, Save, Mail, Phone, MapPin, Briefcase, UserCircle } from "lucide-react";
+import { User, Camera, Save, Mail, Phone, MapPin, Briefcase, UserCircle, BadgeCheck } from "lucide-react";
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
@@ -16,13 +17,15 @@ export default function Profile() {
   const [gender, setGender] = useState(user?.gender || "homme");
   const [avatar, setAvatar] = useState(user?.avatar || "");
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setAvatar(reader.result as string);
-    reader.readAsDataURL(file);
+    if (!file || !user) return;
+    setUploading(true);
+    const url = await uploadAvatar(user.id, file);
+    if (url) setAvatar(url);
+    setUploading(false);
   };
 
   const handleSave = async () => {
@@ -34,6 +37,8 @@ export default function Profile() {
     setTimeout(() => setSaved(false), 2500);
   };
 
+  const isCertified = (user as any)?.is_certified === true;
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="eden-section-title mb-6 flex items-center gap-2"><User className="h-6 w-6 text-primary" /> Mon Profil</h1>
@@ -44,9 +49,13 @@ export default function Profile() {
             <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <Camera className="h-6 w-6 text-white" />
             </div>
+            {uploading && <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center"><span className="text-white text-xs">Upload...</span></div>}
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
-          <p className="mt-2 text-lg font-display font-bold text-foreground">{pseudo || `${firstName} ${lastName}` || user?.name}</p>
+          <p className="mt-2 text-lg font-display font-bold text-foreground flex items-center gap-1.5">
+            {pseudo || `${firstName} ${lastName}` || user?.name}
+            {isCertified && <BadgeCheck className="h-5 w-5 text-primary" />}
+          </p>
           {user?.role && (
             <span className="eden-badge-category mt-1 flex items-center gap-1">
               <Briefcase className="h-3 w-3" /> {user.role === "entreprise" ? user.company_name || "Entreprise" : "Particulier"}
