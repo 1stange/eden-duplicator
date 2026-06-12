@@ -32,8 +32,8 @@ export default function Favorites() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {favAds.map((ad: any) => (
             <div key={ad.id} onClick={() => navigate(`/ad/${ad.id}`)} className="eden-card cursor-pointer overflow-hidden group">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                 <button onClick={(e) => removeFav(ad.id, e)} className="absolute top-2 right-2 p-1.5 rounded-full bg-card/80 backdrop-blur-sm">
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </button>
