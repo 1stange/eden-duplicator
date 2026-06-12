@@ -149,20 +149,30 @@ export default function AdDetails() {
           </div>
 
           {/* Seller card */}
-          <div className="mt-6 eden-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                <User className="h-5 w-5 text-secondary-foreground" />
+          <div className="mt-6 eden-card p-4 relative overflow-hidden">
+            <div className="absolute inset-0 eden-gradient opacity-5 pointer-events-none" />
+            <div className="flex items-center gap-3 relative">
+              <div className="relative">
+                <img
+                  src={(adOwnerProfile as any)?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${ad.user_name}`}
+                  alt={ad.user_name}
+                  className="w-12 h-12 rounded-full bg-secondary object-cover ring-2 ring-card shadow"
+                />
+                {isCertified && (
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-eden-success rounded-full p-0.5 ring-2 ring-card">
+                    <BadgeCheck className="h-3 w-3 text-white" />
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="font-medium text-foreground flex items-center gap-1.5">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground truncate flex items-center gap-1.5">
                   {ad.user_name}
-                  {isCertified && <BadgeCheck className="h-4 w-4 text-primary" />}
+                  {isCertified && <span className="text-[10px] font-medium text-eden-success">Certifié</span>}
                 </p>
-                {ad.user_phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{ad.user_phone}</p>}
+                {ad.user_phone && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Phone className="h-3 w-3" />{ad.user_phone}</p>}
               </div>
             </div>
-            {ad.user_phone && <a href={`tel:${ad.user_phone}`} className="eden-btn-primary w-full mt-3"><Phone className="h-4 w-4 mr-2" /> Appeler</a>}
+            {ad.user_phone && <a href={`tel:${ad.user_phone}`} className="eden-btn-primary w-full mt-3 relative"><Phone className="h-4 w-4 mr-2" /> Appeler maintenant</a>}
           </div>
 
           {/* Report */}
