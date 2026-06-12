@@ -356,8 +356,8 @@ function RecentAdsGrid({ ads, favs, toggleFav, navigate }: {
         {ads.map((ad: any, i: number) => (
           <motion.div key={ad.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
             whileHover={{ y: -3 }} onClick={() => navigate(`/ad/${ad.id}`)} className="eden-card cursor-pointer overflow-hidden group">
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+              <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
               {ad.is_urgent && <span className="absolute top-2 left-2 eden-badge bg-destructive text-destructive-foreground text-[10px]">🔥 Urgent</span>}
               <button onClick={(e) => toggleFav(ad.id, e)} className="absolute top-2 right-2 p-1.5 rounded-full bg-card/80 backdrop-blur-sm">
                 <Heart className={`h-4 w-4 ${favs.includes(ad.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
