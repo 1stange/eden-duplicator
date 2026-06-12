@@ -126,25 +126,47 @@ export default function AdDetails() {
         </div>
 
         <div>
-          <span className="eden-badge-category mb-2">{ad.category}</span>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground mt-2">{ad.title}</h1>
-          <p className="text-2xl md:text-3xl font-bold text-primary mt-3">{formatPrice(ad.price || 0, ad.currency || "FCFA")}</p>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="eden-badge-category">{ad.category}</span>
+            {ad.is_premium && <span className="eden-badge-premium text-[10px]">⭐ Premium</span>}
+            {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground text-[10px]">🔥 Urgent</span>}
+          </div>
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground leading-tight">{ad.title}</h1>
+
+          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Prix</p>
+            <p className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(ad.price || 0, ad.currency || "FCFA")}</p>
+          </div>
 
           {reviews.length > 0 && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-3">
               <div className="flex">{[1,2,3,4,5].map((s) => <Star key={s} className={`h-4 w-4 ${s <= Math.round(avgRating) ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />)}</div>
               <span className="text-sm text-muted-foreground">{avgRating.toFixed(1)} ({reviews.length} avis)</span>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3 mt-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{ad.city}</span>
-            <span className="flex items-center gap-1"><Eye className="h-4 w-4" />{ad.views} vues</span>
-            <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{new Date(ad.created_at!).toLocaleDateString("fr-FR")}</span>
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="eden-card p-3 text-center">
+              <MapPin className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Ville</p>
+              <p className="text-xs font-semibold text-foreground truncate">{ad.city}</p>
+            </div>
+            <div className="eden-card p-3 text-center">
+              <Eye className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Vues</p>
+              <p className="text-xs font-semibold text-foreground">{ad.views}</p>
+            </div>
+            <div className="eden-card p-3 text-center">
+              <Clock className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Publié</p>
+              <p className="text-xs font-semibold text-foreground">{new Date(ad.created_at!).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</p>
+            </div>
           </div>
 
-          <div className="mt-6">
-            <h3 className="font-semibold text-foreground mb-2">Description</h3>
+          <div className="mt-6 eden-card p-4">
+            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <span className="w-1 h-4 bg-primary rounded-full" /> Description
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ad.description}</p>
           </div>
 
