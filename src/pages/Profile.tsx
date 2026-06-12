@@ -89,7 +89,7 @@ export default function Profile() {
             {displayName}
             {isCertified && (
               <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
-                <BadgeCheck className="h-5 w-5 text-primary" />
+                <BadgeCheck className="h-5 w-5 text-eden-success fill-eden-success/20" />
               </motion.span>
             )}
           </h1>
