@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: `${data.firstName} ${data.lastName}`.trim() || data.name,
       phone: data.phone,
       city: data.city,
-      role: data.role,
+      role: data.role as any,
       company_name: data.companyName || null,
       pseudo: data.pseudo || null,
       gender: data.gender,
