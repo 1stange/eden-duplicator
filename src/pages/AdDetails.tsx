@@ -84,77 +84,117 @@ export default function AdDetails() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Image gallery */}
         <div>
-          <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-muted">
-            <img src={allImages[activeImage] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover" />
+          <div className="relative rounded-2xl overflow-hidden aspect-video bg-muted shadow-md">
+            <img src={allImages[activeImage] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain" />
+            <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
             <div className="absolute top-3 left-3 flex gap-2">
-              {ad.is_premium && <span className="eden-badge-premium">⭐ Premium</span>}
-              {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground">🔥 Urgent</span>}
+              {ad.is_premium && <span className="eden-badge-premium shadow-md">⭐ Premium</span>}
+              {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground shadow-md">🔥 Urgent</span>}
             </div>
             <div className="absolute top-3 right-3 flex gap-2">
-              <button onClick={() => toggleFavMut.mutate(ad.id)} className="p-2 rounded-full bg-card/80 backdrop-blur-sm shadow-md">
+              <button onClick={() => toggleFavMut.mutate(ad.id)} className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
                 <Heart className={`h-5 w-5 ${isFav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
-              <button className="p-2 rounded-full bg-card/80 backdrop-blur-sm shadow-md">
+              <button className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
                 <Share2 className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
+            {allImages.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                {allImages.map((_: string, i: number) => (
+                  <span key={i} className={`h-1.5 rounded-full transition-all ${i === activeImage ? "w-6 bg-white" : "w-1.5 bg-white/50"}`} />
+                ))}
+              </div>
+            )}
           </div>
           {/* Thumbnails */}
           {allImages.length > 1 && (
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-3">
               {allImages.map((img: string, i: number) => (
-                <button key={i} onClick={() => setActiveImage(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === activeImage ? "border-primary" : "border-transparent"}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                <button key={i} onClick={() => setActiveImage(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 bg-muted transition-all ${i === activeImage ? "border-primary scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}>
+                  <img src={img} alt="" className="w-full h-full object-contain" />
                 </button>
               ))}
             </div>
           )}
           {/* Video */}
           {(ad as any).video && (
-            <div className="mt-3 rounded-xl overflow-hidden border">
+            <div className="mt-3 rounded-2xl overflow-hidden border bg-black">
               <video src={(ad as any).video} controls className="w-full aspect-video" />
             </div>
           )}
         </div>
 
         <div>
-          <span className="eden-badge-category mb-2">{ad.category}</span>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-foreground mt-2">{ad.title}</h1>
-          <p className="text-2xl md:text-3xl font-bold text-primary mt-3">{formatPrice(ad.price || 0, ad.currency || "FCFA")}</p>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="eden-badge-category">{ad.category}</span>
+            {ad.is_premium && <span className="eden-badge-premium text-[10px]">⭐ Premium</span>}
+            {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground text-[10px]">🔥 Urgent</span>}
+          </div>
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground leading-tight">{ad.title}</h1>
+
+          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Prix</p>
+            <p className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(ad.price || 0, ad.currency || "FCFA")}</p>
+          </div>
 
           {reviews.length > 0 && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-3">
               <div className="flex">{[1,2,3,4,5].map((s) => <Star key={s} className={`h-4 w-4 ${s <= Math.round(avgRating) ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />)}</div>
               <span className="text-sm text-muted-foreground">{avgRating.toFixed(1)} ({reviews.length} avis)</span>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3 mt-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{ad.city}</span>
-            <span className="flex items-center gap-1"><Eye className="h-4 w-4" />{ad.views} vues</span>
-            <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{new Date(ad.created_at!).toLocaleDateString("fr-FR")}</span>
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="eden-card p-3 text-center">
+              <MapPin className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Ville</p>
+              <p className="text-xs font-semibold text-foreground truncate">{ad.city}</p>
+            </div>
+            <div className="eden-card p-3 text-center">
+              <Eye className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Vues</p>
+              <p className="text-xs font-semibold text-foreground">{ad.views}</p>
+            </div>
+            <div className="eden-card p-3 text-center">
+              <Clock className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground uppercase">Publié</p>
+              <p className="text-xs font-semibold text-foreground">{new Date(ad.created_at!).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</p>
+            </div>
           </div>
 
-          <div className="mt-6">
-            <h3 className="font-semibold text-foreground mb-2">Description</h3>
+          <div className="mt-6 eden-card p-4">
+            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <span className="w-1 h-4 bg-primary rounded-full" /> Description
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ad.description}</p>
           </div>
 
           {/* Seller card */}
-          <div className="mt-6 eden-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                <User className="h-5 w-5 text-secondary-foreground" />
+          <div className="mt-6 eden-card p-4 relative overflow-hidden">
+            <div className="absolute inset-0 eden-gradient opacity-5 pointer-events-none" />
+            <div className="flex items-center gap-3 relative">
+              <div className="relative">
+                <img
+                  src={(adOwnerProfile as any)?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${ad.user_name}`}
+                  alt={ad.user_name}
+                  className="w-12 h-12 rounded-full bg-secondary object-cover ring-2 ring-card shadow"
+                />
+                {isCertified && (
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-eden-success rounded-full p-0.5 ring-2 ring-card">
+                    <BadgeCheck className="h-3 w-3 text-white" />
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="font-medium text-foreground flex items-center gap-1.5">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground truncate flex items-center gap-1.5">
                   {ad.user_name}
-                  {isCertified && <BadgeCheck className="h-4 w-4 text-primary" />}
+                  {isCertified && <span className="text-[10px] font-medium text-eden-success">Certifié</span>}
                 </p>
-                {ad.user_phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{ad.user_phone}</p>}
+                {ad.user_phone && <p className="text-xs text-muted-foreground flex items-center gap-1 truncate"><Phone className="h-3 w-3" />{ad.user_phone}</p>}
               </div>
             </div>
-            {ad.user_phone && <a href={`tel:${ad.user_phone}`} className="eden-btn-primary w-full mt-3"><Phone className="h-4 w-4 mr-2" /> Appeler</a>}
+            {ad.user_phone && <a href={`tel:${ad.user_phone}`} className="eden-btn-primary w-full mt-3 relative"><Phone className="h-4 w-4 mr-2" /> Appeler maintenant</a>}
           </div>
 
           {/* Report */}
@@ -239,8 +279,8 @@ export default function AdDetails() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {suggestedAds.map((sAd: any) => (
               <div key={sAd.id} onClick={() => navigate(`/ad/${sAd.id}`)} className="eden-card cursor-pointer overflow-hidden group">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={sAd.images?.[0] || "/placeholder.svg"} alt={sAd.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                  <img src={sAd.images?.[0] || "/placeholder.svg"} alt={sAd.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-2.5">
                   <h3 className="font-medium text-xs text-foreground line-clamp-2">{sAd.title}</h3>

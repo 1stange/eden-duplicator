@@ -135,8 +135,8 @@ export function AppSidebar() {
             <button onClick={() => navigate("/profile")} className="shrink-0 group relative">
               <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt={user.name} className="w-8 h-8 rounded-full bg-sidebar-accent object-cover" />
               {(user as any)?.is_certified && (
-                <div className="absolute -bottom-0.5 -right-0.5 bg-primary rounded-full p-0.5">
-                  <BadgeCheck className="h-2.5 w-2.5 text-primary-foreground" />
+                <div className="absolute -bottom-0.5 -right-0.5 bg-eden-success rounded-full p-0.5 ring-2 ring-sidebar">
+                  <BadgeCheck className="h-2.5 w-2.5 text-white" />
                 </div>
               )}
             </button>
