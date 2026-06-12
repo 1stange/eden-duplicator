@@ -56,7 +56,7 @@ export default function Publish() {
       // Upload images to storage
       const imageUrls: string[] = [];
       for (const img of imageFiles) {
-        const url = await uploadAdMedia(user.id, img.file, "image");
+        const url = await uploadAdMedia(user.id, img.file, "image", imageAspect);
         if (url) imageUrls.push(url);
       }
 
