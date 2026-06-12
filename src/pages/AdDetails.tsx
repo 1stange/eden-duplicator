@@ -279,8 +279,8 @@ export default function AdDetails() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {suggestedAds.map((sAd: any) => (
               <div key={sAd.id} onClick={() => navigate(`/ad/${sAd.id}`)} className="eden-card cursor-pointer overflow-hidden group">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={sAd.images?.[0] || "/placeholder.svg"} alt={sAd.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                  <img src={sAd.images?.[0] || "/placeholder.svg"} alt={sAd.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-2.5">
                   <h3 className="font-medium text-xs text-foreground line-clamp-2">{sAd.title}</h3>
