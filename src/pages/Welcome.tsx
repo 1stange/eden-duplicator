@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { setWelcomeSeen } from "@/lib/localStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Heart, Shield, MessageSquare, Sparkles } from "lucide-react";
 
@@ -36,20 +35,13 @@ export default function Welcome() {
   const navigate = useNavigate();
 
   const next = () => {
-    if (current === slides.length - 1) {
-      setWelcomeSeen();
-      navigate("/");
-    } else {
-      setCurrent(current + 1);
-    }
+    if (current === slides.length - 1) navigate("/auth");
+    else setCurrent(current + 1);
   };
 
   const prev = () => { if (current > 0) setCurrent(current - 1); };
 
-  const skip = () => {
-    setWelcomeSeen();
-    navigate("/");
-  };
+  const skip = () => navigate("/auth");
 
   const slide = slides[current];
 

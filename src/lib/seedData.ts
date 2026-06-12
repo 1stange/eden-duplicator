@@ -1,66 +1,174 @@
-import { Ad, User, Message, Notification, Review } from "@/types";
+// Mock data — all snake_case to match existing page consumers.
 
-export const sampleUsers: User[] = [
-  { id: "user-1", name: "Jean-Claude Mboko", email: "jc.mboko@eden.cg", phone: "+242 06 500 1234", city: "Brazzaville", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jean", createdAt: "2024-01-15" },
-  { id: "user-2", name: "Marie Louemba", email: "marie.l@eden.cg", phone: "+242 05 600 5678", city: "Pointe-Noire", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie", createdAt: "2024-02-10" },
-  { id: "user-3", name: "Patrick Ngouabi", email: "p.ngouabi@eden.cg", phone: "+242 06 700 9012", city: "Dolisie", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Patrick", createdAt: "2024-03-05" },
-  { id: "user-4", name: "Sylvie Massamba", email: "sylvie.m@eden.cg", phone: "+242 05 800 3456", city: "Brazzaville", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sylvie", createdAt: "2024-04-20" },
-  { id: "user-5", name: "Alain Moukoko", email: "alain.mk@eden.cg", phone: "+242 06 900 7890", city: "Nkayi", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alain", createdAt: "2024-05-12" },
+const dicebear = (seed: string) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+
+export interface MockProfile {
+  id: string;
+  email: string;
+  password: string; // mock only — never do this in production
+  name: string;
+  phone: string | null;
+  city: string;
+  avatar: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  pseudo: string | null;
+  gender: string | null;
+  role: "admin" | "entreprise" | "particulier";
+  company_name: string | null;
+  birth_date: string | null;
+  is_certified: boolean;
+  created_at: string;
+}
+
+export const sampleProfiles: MockProfile[] = [
+  {
+    id: "user-admin", email: "lxrd@fallens.com", password: "Lord@admin@123",
+    name: "Lord", phone: "+242 06 000 0000", city: "Brazzaville",
+    avatar: dicebear("Lord"), first_name: "Lord", last_name: "Fallens", pseudo: "Lord",
+    gender: "autre", role: "admin", company_name: null, birth_date: "1990-01-01",
+    is_certified: true, created_at: "2024-01-01T00:00:00Z",
+  },
+  // Entreprises
+  {
+    id: "user-ent-1", email: "spa.eden@eden.cg", password: "demo1234",
+    name: "Spa Eden Brazza", phone: "+242 06 111 2222", city: "Brazzaville",
+    avatar: dicebear("SpaEden"), first_name: "Sylvie", last_name: "Massamba", pseudo: "SpaEden",
+    gender: "femme", role: "entreprise", company_name: "Spa Eden Brazza", birth_date: "1988-04-12",
+    is_certified: true, created_at: "2024-04-20T00:00:00Z",
+  },
+  {
+    id: "user-ent-2", email: "rendezvous.cg@eden.cg", password: "demo1234",
+    name: "Rendez-Vous CG", phone: "+242 05 333 4444", city: "Pointe-Noire",
+    avatar: dicebear("RendezVous"), first_name: "Marie", last_name: "Louemba", pseudo: "MarieL",
+    gender: "femme", role: "entreprise", company_name: "Rendez-Vous CG", birth_date: "1991-09-07",
+    is_certified: false, created_at: "2024-05-10T00:00:00Z",
+  },
+  {
+    id: "user-ent-3", email: "boutique.adult@eden.cg", password: "demo1234",
+    name: "Boutique Adult Congo", phone: "+242 06 555 6666", city: "Dolisie",
+    avatar: dicebear("Boutique"), first_name: "Patrick", last_name: "Ngouabi", pseudo: "AdultShop",
+    gender: "homme", role: "entreprise", company_name: "Boutique Adult Congo", birth_date: "1985-03-22",
+    is_certified: true, created_at: "2024-06-01T00:00:00Z",
+  },
+  // Particuliers
+  {
+    id: "user-p-1", email: "jean.mboko@eden.cg", password: "demo1234",
+    name: "Jean-Claude Mboko", phone: "+242 06 500 1234", city: "Brazzaville",
+    avatar: dicebear("Jean"), first_name: "Jean-Claude", last_name: "Mboko", pseudo: "JCM",
+    gender: "homme", role: "particulier", company_name: null, birth_date: "1989-07-14",
+    is_certified: false, created_at: "2024-02-15T00:00:00Z",
+  },
+  {
+    id: "user-p-2", email: "alain.mk@eden.cg", password: "demo1234",
+    name: "Alain Moukoko", phone: "+242 06 900 7890", city: "Nkayi",
+    avatar: dicebear("Alain"), first_name: "Alain", last_name: "Moukoko", pseudo: "AlainM",
+    gender: "homme", role: "particulier", company_name: null, birth_date: "1992-11-30",
+    is_certified: false, created_at: "2024-05-12T00:00:00Z",
+  },
+  {
+    id: "user-p-3", email: "celine.b@eden.cg", password: "demo1234",
+    name: "Céline Bantou", phone: "+242 05 700 8899", city: "Brazzaville",
+    avatar: dicebear("Celine"), first_name: "Céline", last_name: "Bantou", pseudo: "Cici",
+    gender: "femme", role: "particulier", company_name: null, birth_date: "1995-02-18",
+    is_certified: true, created_at: "2024-07-08T00:00:00Z",
+  },
+  {
+    id: "user-p-4", email: "didier.n@eden.cg", password: "demo1234",
+    name: "Didier Nkouka", phone: "+242 06 222 3344", city: "Pointe-Noire",
+    avatar: dicebear("Didier"), first_name: "Didier", last_name: "Nkouka", pseudo: "DidN",
+    gender: "homme", role: "particulier", company_name: null, birth_date: "1990-06-05",
+    is_certified: false, created_at: "2024-08-20T00:00:00Z",
+  },
 ];
 
-export const sampleAds: Ad[] = [
+export interface MockAd {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  currency: string;
+  category: string;
+  city: string;
+  images: string[];
+  video?: string | null;
+  user_id: string;
+  user_name: string;
+  user_phone: string;
+  is_premium: boolean;
+  is_urgent: boolean;
+  views: number;
+  status: "active" | "suspended" | "pending";
+  created_at: string;
+  updated_at: string;
+}
+
+const img = (id: string) => `https://images.unsplash.com/photo-${id}?w=600`;
+
+export const sampleAds: MockAd[] = [
   // Rencontres
-  { id: "ad-1", title: "Femme sérieuse cherche relation stable", description: "Femme de 28 ans, sérieuse et cultivée, cherche homme mature pour relation sérieuse à Brazzaville. Discrétion assurée.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: true, isUrgent: false, views: 456, createdAt: "2025-03-01", updatedAt: "2025-03-01" },
-  { id: "ad-2", title: "Homme 35 ans cherche compagne", description: "Cadre, 35 ans, bien installé à Pointe-Noire. Cherche femme pour relation durable. Sérieux uniquement.", price: 0, currency: "FCFA", category: "rencontres", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 234, createdAt: "2025-03-02", updatedAt: "2025-03-02" },
-  { id: "ad-3", title: "Rencontre amicale et plus si affinités", description: "Homme de 30 ans, sportif et sociable. Cherche femme pour sorties et plus si affinités. Brazzaville.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 189, createdAt: "2025-03-03", updatedAt: "2025-03-03" },
-  { id: "ad-4", title: "Femme douce cherche homme attentionné", description: "25 ans, douce et attentionnée. Cherche homme respectueux pour belle relation. Dolisie et environs.", price: 0, currency: "FCFA", category: "rencontres", city: "Dolisie", images: ["https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 345, createdAt: "2025-03-04", updatedAt: "2025-03-04" },
-  { id: "ad-5", title: "Cherche partenaire pour sorties", description: "Homme 40 ans, entrepreneur. Cherche compagne pour sorties restaurants, voyages. Discrétion totale.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600"], userId: "user-5", userName: "Alain Moukoko", userPhone: "+242 06 900 7890", isPremium: false, isUrgent: false, views: 156, createdAt: "2025-03-05", updatedAt: "2025-03-05" },
-  { id: "ad-6", title: "Femme 32 ans - Nkayi", description: "Femme indépendante de 32 ans cherche homme sérieux pour relation stable. Nkayi.", price: 0, currency: "FCFA", category: "rencontres", city: "Nkayi", images: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 98, createdAt: "2025-03-06", updatedAt: "2025-03-06" },
-  { id: "ad-7", title: "Homme mature cherche femme", description: "45 ans, divorcé, bien établi. Cherche femme mature pour relation sérieuse. Pointe-Noire.", price: 0, currency: "FCFA", category: "rencontres", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 167, createdAt: "2025-03-07", updatedAt: "2025-03-07" },
-  { id: "ad-8", title: "Rencontre discrète à Brazzaville", description: "Femme 27 ans, belle et discrète. Cherche homme généreux pour moments agréables. Brazzaville uniquement.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 567, createdAt: "2025-02-28", updatedAt: "2025-02-28" },
-  { id: "ad-9", title: "Jeune homme cherche âme sœur", description: "26 ans, étudiant en fin de cycle, cherche femme pour construire une relation. Owando.", price: 0, currency: "FCFA", category: "rencontres", city: "Owando", images: ["https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 78, createdAt: "2025-03-08", updatedAt: "2025-03-08" },
-  { id: "ad-10", title: "Femme dynamique cherche compagnon", description: "33 ans, commerçante. Cherche homme honnête et travailleur pour relation stable. Madingou.", price: 0, currency: "FCFA", category: "rencontres", city: "Madingou", images: ["https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 112, createdAt: "2025-03-09", updatedAt: "2025-03-09" },
+  { id: "ad-1", title: "Femme sérieuse cherche relation stable", description: "Femme de 28 ans, sérieuse et cultivée, cherche homme mature pour relation sérieuse à Brazzaville. Discrétion assurée.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: [img("1529626455594-4ff0802cfb7e")], user_id: "user-p-3", user_name: "Céline Bantou", user_phone: "+242 05 700 8899", is_premium: true, is_urgent: false, views: 456, status: "active", created_at: "2026-05-01T10:00:00Z", updated_at: "2026-05-01T10:00:00Z" },
+  { id: "ad-2", title: "Homme 35 ans cherche compagne", description: "Cadre, 35 ans, bien installé à Pointe-Noire. Cherche femme pour relation durable.", price: 0, currency: "FCFA", category: "rencontres", city: "Pointe-Noire", images: [img("1507003211169-0a1dd7228f2d")], user_id: "user-p-4", user_name: "Didier Nkouka", user_phone: "+242 06 222 3344", is_premium: false, is_urgent: false, views: 234, status: "active", created_at: "2026-05-02T10:00:00Z", updated_at: "2026-05-02T10:00:00Z" },
+  { id: "ad-3", title: "Rencontre amicale et plus si affinités", description: "Homme 30 ans sportif, sociable. Brazzaville.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: [img("1506794778202-cad84cf45f1d")], user_id: "user-p-1", user_name: "Jean-Claude Mboko", user_phone: "+242 06 500 1234", is_premium: false, is_urgent: false, views: 189, status: "active", created_at: "2026-05-03T10:00:00Z", updated_at: "2026-05-03T10:00:00Z" },
+  { id: "ad-4", title: "Femme douce cherche homme attentionné", description: "25 ans, douce et attentionnée. Dolisie et environs.", price: 0, currency: "FCFA", category: "rencontres", city: "Dolisie", images: [img("1494790108377-be9c29b29330")], user_id: "user-ent-2", user_name: "Marie Louemba", user_phone: "+242 05 333 4444", is_premium: true, is_urgent: false, views: 345, status: "active", created_at: "2026-05-04T10:00:00Z", updated_at: "2026-05-04T10:00:00Z" },
+  { id: "ad-5", title: "Cherche partenaire pour sorties", description: "Homme 40 ans, entrepreneur. Discrétion totale.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: [img("1472099645785-5658abf4ff4e")], user_id: "user-p-2", user_name: "Alain Moukoko", user_phone: "+242 06 900 7890", is_premium: false, is_urgent: false, views: 156, status: "active", created_at: "2026-05-05T10:00:00Z", updated_at: "2026-05-05T10:00:00Z" },
+  { id: "ad-6", title: "Femme 32 ans - Nkayi", description: "Femme indépendante cherche homme sérieux. Nkayi.", price: 0, currency: "FCFA", category: "rencontres", city: "Nkayi", images: [img("1534528741775-53994a69daeb")], user_id: "user-ent-1", user_name: "Sylvie Massamba", user_phone: "+242 06 111 2222", is_premium: false, is_urgent: false, views: 98, status: "active", created_at: "2026-05-06T10:00:00Z", updated_at: "2026-05-06T10:00:00Z" },
+  { id: "ad-7", title: "Homme mature cherche femme", description: "45 ans, divorcé, bien établi. Pointe-Noire.", price: 0, currency: "FCFA", category: "rencontres", city: "Pointe-Noire", images: [img("1500648767791-00dcc994a43e")], user_id: "user-p-4", user_name: "Didier Nkouka", user_phone: "+242 06 222 3344", is_premium: false, is_urgent: false, views: 167, status: "active", created_at: "2026-05-07T10:00:00Z", updated_at: "2026-05-07T10:00:00Z" },
+  { id: "ad-8", title: "Rencontre discrète à Brazzaville", description: "Femme 27 ans, belle et discrète.", price: 0, currency: "FCFA", category: "rencontres", city: "Brazzaville", images: [img("1524504388940-b1c1722653e1")], user_id: "user-p-3", user_name: "Céline Bantou", user_phone: "+242 05 700 8899", is_premium: true, is_urgent: false, views: 567, status: "active", created_at: "2026-05-08T10:00:00Z", updated_at: "2026-05-08T10:00:00Z" },
 
   // Escortes + Massages
-  { id: "ad-11", title: "Massage relaxant professionnel", description: "Masseuse professionnelle certifiée. Massage suédois, californien, thaïlandais. À domicile ou en salon. Brazzaville.", price: 15000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: true, isUrgent: false, views: 678, createdAt: "2025-02-25", updatedAt: "2025-02-25" },
-  { id: "ad-12", title: "Escorte VIP - Soirées et événements", description: "Accompagnatrice élégante pour vos soirées, dîners d'affaires et événements. Classe et discrétion garanties.", price: 50000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 890, createdAt: "2025-02-20", updatedAt: "2025-02-20" },
-  { id: "ad-13", title: "Spa & Massage détente", description: "Centre de bien-être propose massages aux huiles essentielles, gommage, sauna. Sur rendez-vous.", price: 20000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 345, createdAt: "2025-03-01", updatedAt: "2025-03-01" },
-  { id: "ad-14", title: "Massage à domicile - Femme", description: "Masseuse expérimentée se déplace à domicile. Massage corporel complet, anti-stress. Tarifs négociables.", price: 10000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 234, createdAt: "2025-03-02", updatedAt: "2025-03-02" },
-  { id: "ad-15", title: "Escorte pour voyages d'affaires", description: "Accompagnatrice bilingue français/anglais pour déplacements professionnels. Présentation soignée.", price: 75000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 456, createdAt: "2025-02-22", updatedAt: "2025-02-22" },
-  { id: "ad-16", title: "Massage sportif et récupération", description: "Kinésithérapeute propose massage sportif, récupération musculaire. Idéal après entraînement.", price: 12000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 123, createdAt: "2025-03-03", updatedAt: "2025-03-03" },
-  { id: "ad-17", title: "Accompagnatrice soirée Brazza", description: "Jeune femme élégante disponible pour accompagnement soirées, restaurants. Brazzaville.", price: 30000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 289, createdAt: "2025-03-04", updatedAt: "2025-03-04" },
-  { id: "ad-18", title: "Massage tantrique professionnel", description: "Découvrez le massage tantrique dans un cadre luxueux et apaisant. Réservation obligatoire.", price: 25000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: true, views: 567, createdAt: "2025-03-05", updatedAt: "2025-03-05" },
-  { id: "ad-19", title: "Massage duo - Couples", description: "Offrez-vous un moment de détente à deux. Massage duo dans un espace privatif. Brazzaville.", price: 35000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1591343395082-e120087004b4?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 178, createdAt: "2025-03-06", updatedAt: "2025-03-06" },
-  { id: "ad-20", title: "Escorte haut de gamme Dolisie", description: "Femme raffinée, disponible pour accompagnement événements et sorties. Dolisie et environs.", price: 40000, currency: "FCFA", category: "escortes-massages", city: "Dolisie", images: ["https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: false, isUrgent: false, views: 201, createdAt: "2025-03-07", updatedAt: "2025-03-07" },
+  { id: "ad-11", title: "Massage relaxant professionnel", description: "Masseuse certifiée. Massage suédois, californien, thaïlandais. À domicile ou en salon.", price: 15000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: [img("1544161515-4ab6ce6db874")], user_id: "user-ent-1", user_name: "Spa Eden Brazza", user_phone: "+242 06 111 2222", is_premium: true, is_urgent: false, views: 678, status: "active", created_at: "2026-04-25T10:00:00Z", updated_at: "2026-04-25T10:00:00Z" },
+  { id: "ad-12", title: "Escorte VIP - Soirées", description: "Accompagnatrice élégante pour vos soirées et dîners.", price: 50000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: [img("1488426862026-3ee34a7d66df")], user_id: "user-ent-2", user_name: "Rendez-Vous CG", user_phone: "+242 05 333 4444", is_premium: true, is_urgent: false, views: 890, status: "active", created_at: "2026-04-20T10:00:00Z", updated_at: "2026-04-20T10:00:00Z" },
+  { id: "ad-13", title: "Spa & Massage détente", description: "Massages aux huiles essentielles, gommage, sauna.", price: 20000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: [img("1600334089648-b0d9d3028eb2")], user_id: "user-ent-2", user_name: "Rendez-Vous CG", user_phone: "+242 05 333 4444", is_premium: false, is_urgent: false, views: 345, status: "active", created_at: "2026-05-01T10:00:00Z", updated_at: "2026-05-01T10:00:00Z" },
+  { id: "ad-14", title: "Massage à domicile", description: "Masseuse expérimentée se déplace à domicile.", price: 10000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: [img("1519823551278-64ac92734fb1")], user_id: "user-ent-1", user_name: "Spa Eden Brazza", user_phone: "+242 06 111 2222", is_premium: false, is_urgent: false, views: 234, status: "active", created_at: "2026-05-02T10:00:00Z", updated_at: "2026-05-02T10:00:00Z" },
+  { id: "ad-15", title: "Escorte voyages d'affaires", description: "Accompagnatrice bilingue français/anglais.", price: 75000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: [img("1515886657613-9f3515b0c78f")], user_id: "user-ent-2", user_name: "Rendez-Vous CG", user_phone: "+242 05 333 4444", is_premium: true, is_urgent: false, views: 456, status: "active", created_at: "2026-04-22T10:00:00Z", updated_at: "2026-04-22T10:00:00Z" },
+  { id: "ad-18", title: "Massage tantrique", description: "Cadre luxueux et apaisant. Réservation obligatoire.", price: 25000, currency: "FCFA", category: "escortes-massages", city: "Pointe-Noire", images: [img("1515377905703-c4788e51af15")], user_id: "user-ent-2", user_name: "Rendez-Vous CG", user_phone: "+242 05 333 4444", is_premium: false, is_urgent: true, views: 567, status: "active", created_at: "2026-05-05T10:00:00Z", updated_at: "2026-05-05T10:00:00Z" },
+  { id: "ad-19", title: "Massage duo - Couples", description: "Moment de détente à deux dans un espace privatif.", price: 35000, currency: "FCFA", category: "escortes-massages", city: "Brazzaville", images: [img("1591343395082-e120087004b4")], user_id: "user-ent-1", user_name: "Spa Eden Brazza", user_phone: "+242 06 111 2222", is_premium: false, is_urgent: false, views: 178, status: "active", created_at: "2026-05-06T10:00:00Z", updated_at: "2026-05-06T10:00:00Z" },
 
   // Produits adultes
-  { id: "ad-21", title: "Lingerie fine importée - Lot", description: "Lot de lingerie fine importée d'Europe. Tailles S à XL. Matières de qualité. Vente en gros et détail.", price: 25000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1617331721458-bd3bd3f9c7f8?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: true, isUrgent: false, views: 345, createdAt: "2025-03-01", updatedAt: "2025-03-01" },
-  { id: "ad-22", title: "Huiles de massage parfumées", description: "Huiles de massage premium aux arômes naturels: vanille, jasmin, ylang-ylang. Flacon 250ml.", price: 8000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 234, createdAt: "2025-03-02", updatedAt: "2025-03-02" },
-  { id: "ad-23", title: "Bougies parfumées romantiques", description: "Set de bougies parfumées pour ambiance romantique. 6 bougies aux senteurs variées. Longue durée.", price: 12000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1602607688066-59df701924b6?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 156, createdAt: "2025-03-03", updatedAt: "2025-03-03" },
-  { id: "ad-24", title: "Parfums aphrodisiaques", description: "Collection de parfums aux phéromones. Homme et femme. Import direct. Résultat garanti.", price: 18000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1541643600914-78b084683601?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 456, createdAt: "2025-02-28", updatedAt: "2025-02-28" },
-  { id: "ad-25", title: "Draps satin luxe - King Size", description: "Parure de draps en satin de soie. King size. Couleurs: rouge, noir, blanc. Livraison gratuite.", price: 35000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600"], userId: "user-5", userName: "Alain Moukoko", userPhone: "+242 06 900 7890", isPremium: false, isUrgent: false, views: 189, createdAt: "2025-03-04", updatedAt: "2025-03-04" },
-  { id: "ad-26", title: "Costume cosplay adulte", description: "Costumes de déguisement pour adultes. Plusieurs modèles disponibles. Tailles variées.", price: 20000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 123, createdAt: "2025-03-05", updatedAt: "2025-03-05" },
-  { id: "ad-27", title: "Kit massage sensuel complet", description: "Kit complet pour massage: huiles, bougies, plumes, bandeau. Coffret cadeau idéal.", price: 30000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600"], userId: "user-1", userName: "Jean-Claude Mboko", userPhone: "+242 06 500 1234", isPremium: false, isUrgent: false, views: 267, createdAt: "2025-03-06", updatedAt: "2025-03-06" },
-  { id: "ad-28", title: "Sous-vêtements homme premium", description: "Collection de sous-vêtements masculins haut de gamme. Coton et soie. Import Europe.", price: 15000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 145, createdAt: "2025-03-07", updatedAt: "2025-03-07" },
-  { id: "ad-29", title: "Jeux de société pour adultes", description: "Jeux de société coquins pour soirées entre adultes. Plusieurs titres disponibles.", price: 10000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=600"], userId: "user-5", userName: "Alain Moukoko", userPhone: "+242 06 900 7890", isPremium: false, isUrgent: true, views: 312, createdAt: "2025-03-08", updatedAt: "2025-03-08" },
-  { id: "ad-30", title: "Accessoires bien-être intime", description: "Gamme d'accessoires de bien-être intime. Produits neufs sous emballage. Livraison discrète.", price: 22000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600"], userId: "user-2", userName: "Marie Louemba", userPhone: "+242 05 600 5678", isPremium: true, isUrgent: false, views: 398, createdAt: "2025-02-26", updatedAt: "2025-02-26" },
-  { id: "ad-31", title: "Lingerie grande taille", description: "Lingerie sexy grande taille (XL à 4XL). Modèles confortables et élégants. Pointe-Noire.", price: 18000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: ["https://images.unsplash.com/photo-1617331721458-bd3bd3f9c7f8?w=600"], userId: "user-3", userName: "Patrick Ngouabi", userPhone: "+242 06 700 9012", isPremium: false, isUrgent: false, views: 201, createdAt: "2025-03-09", updatedAt: "2025-03-09" },
-  { id: "ad-32", title: "Nuisettes soie naturelle", description: "Nuisettes en soie naturelle, artisanat local et import. Livraison à Brazzaville.", price: 28000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: ["https://images.unsplash.com/photo-1602607688066-59df701924b6?w=600"], userId: "user-4", userName: "Sylvie Massamba", userPhone: "+242 05 800 3456", isPremium: false, isUrgent: false, views: 134, createdAt: "2025-03-10", updatedAt: "2025-03-10" },
+  { id: "ad-21", title: "Lingerie fine importée", description: "Lot de lingerie fine importée d'Europe. Tailles S à XL.", price: 25000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: [img("1617331721458-bd3bd3f9c7f8")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: true, is_urgent: false, views: 345, status: "active", created_at: "2026-05-01T10:00:00Z", updated_at: "2026-05-01T10:00:00Z" },
+  { id: "ad-22", title: "Huiles de massage parfumées", description: "Vanille, jasmin, ylang-ylang. Flacon 250ml.", price: 8000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: [img("1608571423902-eed4a5ad8108")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: false, is_urgent: false, views: 234, status: "active", created_at: "2026-05-02T10:00:00Z", updated_at: "2026-05-02T10:00:00Z" },
+  { id: "ad-23", title: "Bougies parfumées romantiques", description: "Set de 6 bougies, longue durée.", price: 12000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: [img("1602607688066-59df701924b6")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: false, is_urgent: false, views: 156, status: "active", created_at: "2026-05-03T10:00:00Z", updated_at: "2026-05-03T10:00:00Z" },
+  { id: "ad-24", title: "Parfums aphrodisiaques", description: "Collection de parfums aux phéromones. Import direct.", price: 18000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: [img("1541643600914-78b084683601")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: true, is_urgent: false, views: 456, status: "active", created_at: "2026-04-28T10:00:00Z", updated_at: "2026-04-28T10:00:00Z" },
+  { id: "ad-25", title: "Draps satin luxe", description: "Parure de draps satin de soie. King size.", price: 35000, currency: "FCFA", category: "produits-adultes", city: "Pointe-Noire", images: [img("1631049307264-da0ec9d70304")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: false, is_urgent: false, views: 189, status: "active", created_at: "2026-05-04T10:00:00Z", updated_at: "2026-05-04T10:00:00Z" },
+  { id: "ad-29", title: "Jeux de société pour adultes", description: "Jeux coquins pour soirées entre adultes.", price: 10000, currency: "FCFA", category: "produits-adultes", city: "Brazzaville", images: [img("1610890716171-6b1bb98ffd09")], user_id: "user-ent-3", user_name: "Boutique Adult Congo", user_phone: "+242 06 555 6666", is_premium: false, is_urgent: true, views: 312, status: "active", created_at: "2026-05-08T10:00:00Z", updated_at: "2026-05-08T10:00:00Z" },
 ];
 
-export const sampleMessages: Message[] = [
-  { id: "msg-1", senderId: "user-2", senderName: "Marie Louemba", receiverId: "user-1", receiverName: "Jean-Claude Mboko", adId: "ad-11", adTitle: "Massage relaxant professionnel", content: "Bonjour, quels sont vos horaires ?", read: false, createdAt: "2025-03-07T10:00:00" },
-  { id: "msg-2", senderId: "user-3", senderName: "Patrick Ngouabi", receiverId: "user-1", receiverName: "Jean-Claude Mboko", adId: "ad-3", adTitle: "Rencontre amicale", content: "Salut, toujours disponible ?", read: false, createdAt: "2025-03-07T14:30:00" },
+export const sampleConversations = [
+  { id: "conv-1", participant_1: "user-p-1", participant_2: "user-ent-1", ad_id: "ad-11", ad_title: "Massage relaxant professionnel", created_at: "2026-05-10T09:00:00Z", updated_at: "2026-05-10T10:05:00Z" },
+  { id: "conv-2", participant_1: "user-p-2", participant_2: "user-ent-2", ad_id: "ad-12", ad_title: "Escorte VIP - Soirées", created_at: "2026-05-11T14:00:00Z", updated_at: "2026-05-11T14:30:00Z" },
 ];
 
-export const sampleNotifications: Notification[] = [
-  { id: "notif-1", userId: "user-1", title: "Nouvelle vue", message: "Votre annonce a reçu 50 nouvelles vues", type: "info", read: false, createdAt: "2025-03-07T09:00:00" },
-  { id: "notif-2", userId: "user-1", title: "Nouveau message", message: "Marie Louemba vous a envoyé un message", type: "message", read: false, createdAt: "2025-03-07T10:05:00" },
-  { id: "notif-3", userId: "user-1", title: "Annonce populaire", message: "Votre annonce est dans le top 10 cette semaine", type: "success", read: false, createdAt: "2025-03-06T16:00:00" },
+export const sampleMessages = [
+  { id: "msg-1", conversation_id: "conv-1", sender_id: "user-p-1", content: "Bonjour, quels sont vos horaires pour le massage ?", read: true, created_at: "2026-05-10T09:00:00Z" },
+  { id: "msg-2", conversation_id: "conv-1", sender_id: "user-ent-1", content: "Bonjour ! Du lundi au samedi, 9h à 20h.", read: true, created_at: "2026-05-10T09:30:00Z" },
+  { id: "msg-3", conversation_id: "conv-1", sender_id: "user-p-1", content: "Parfait, je passe demain à 15h.", read: false, created_at: "2026-05-10T10:05:00Z" },
+  { id: "msg-4", conversation_id: "conv-2", sender_id: "user-p-2", content: "Bonsoir, êtes-vous disponible ce week-end ?", read: false, created_at: "2026-05-11T14:00:00Z" },
+  { id: "msg-5", conversation_id: "conv-2", sender_id: "user-ent-2", content: "Oui, samedi soir je suis libre.", read: true, created_at: "2026-05-11T14:30:00Z" },
 ];
 
-export const sampleReviews: Review[] = [
-  { id: "rev-1", adId: "ad-11", userId: "user-2", userName: "Marie Louemba", rating: 5, comment: "Excellent massage, très professionnel !", createdAt: "2025-03-05T10:00:00" },
-  { id: "rev-2", adId: "ad-11", userId: "user-3", userName: "Patrick Ngouabi", rating: 4, comment: "Bon service, je recommande.", createdAt: "2025-03-06T14:00:00" },
-  { id: "rev-3", adId: "ad-12", userId: "user-1", userName: "Jean-Claude Mboko", rating: 5, comment: "Très classe et professionnelle.", createdAt: "2025-03-04T18:00:00" },
+export const sampleNotifications = [
+  { id: "notif-1", user_id: "user-p-1", title: "Nouveau message", message: "Spa Eden Brazza vous a répondu", type: "message", read: false, created_at: "2026-05-10T09:30:00Z" },
+  { id: "notif-2", user_id: "user-ent-1", title: "Nouvelle vue", message: "Votre annonce a reçu 50 nouvelles vues", type: "info", read: false, created_at: "2026-05-09T16:00:00Z" },
+  { id: "notif-3", user_id: "user-ent-1", title: "Top 10 cette semaine", message: "Votre annonce est dans le top 10", type: "success", read: true, created_at: "2026-05-08T12:00:00Z" },
 ];
+
+export const sampleReviews = [
+  { id: "rev-1", ad_id: "ad-11", user_id: "user-p-1", user_name: "Jean-Claude Mboko", rating: 5, comment: "Excellent massage, très professionnel !", created_at: "2026-05-05T10:00:00Z" },
+  { id: "rev-2", ad_id: "ad-11", user_id: "user-p-2", user_name: "Alain Moukoko", rating: 4, comment: "Bon service, je recommande.", created_at: "2026-05-06T14:00:00Z" },
+  { id: "rev-3", ad_id: "ad-12", user_id: "user-p-1", user_name: "Jean-Claude Mboko", rating: 5, comment: "Très classe et professionnelle.", created_at: "2026-05-04T18:00:00Z" },
+  { id: "rev-4", ad_id: "ad-21", user_id: "user-p-3", user_name: "Céline Bantou", rating: 5, comment: "Qualité au rendez-vous, livraison rapide.", created_at: "2026-05-03T11:00:00Z" },
+];
+
+export const sampleReports = [
+  { id: "rep-1", ad_id: "ad-5", reporter_id: "user-p-3", reason: "Contenu inapproprié", details: "Photos non conformes", status: "pending", reviewed_by: null, reviewed_at: null, created_at: "2026-05-09T15:00:00Z" },
+];
+
+export const sampleFavorites = [
+  { user_id: "user-p-1", ad_id: "ad-11" },
+  { user_id: "user-p-1", ad_id: "ad-12" },
+  { user_id: "user-p-2", ad_id: "ad-21" },
+];
+
+// Backwards compat exports (in case any old code imports these)
+export const sampleUsers = sampleProfiles as any;
