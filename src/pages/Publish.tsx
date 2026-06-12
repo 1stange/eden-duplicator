@@ -92,18 +92,29 @@ export default function Publish() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Photos */}
         <div className="eden-card p-4">
-          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Photos ({imageFiles.length}/3)</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Photos ({imageFiles.length}/3)</h3>
+            <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+              {(["16:9", "1:1"] as const).map((r) => (
+                <button key={r} type="button" onClick={() => setImageAspect(r)}
+                  className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${imageAspect === r ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-2">Les photos seront redimensionnées au format <strong>{imageAspect}</strong> pour s'afficher correctement.</p>
+          <div className={`grid gap-2 ${imageAspect === "16:9" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-3"}`}>
             {imageFiles.map((img, i) => (
-              <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
-                <img src={img.preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+              <div key={i} className={`relative ${imageAspect === "16:9" ? "aspect-video" : "aspect-square"} rounded-lg overflow-hidden border bg-muted`}>
+                <img src={img.preview} alt={`Photo ${i + 1}`} className="w-full h-full object-contain" />
                 <button type="button" onClick={() => setImageFiles((prev) => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground">
                   <X className="h-3 w-3" />
                 </button>
               </div>
             ))}
             {imageFiles.length < 3 && (
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className={`${imageAspect === "16:9" ? "aspect-video" : "aspect-square"} rounded-lg border-2 border-dashed border-input hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors`}>
                 <ImagePlus className="h-5 w-5 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">Ajouter</span>
               </button>
             )}
