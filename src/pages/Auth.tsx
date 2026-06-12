@@ -165,6 +165,32 @@ export default function Auth() {
                   {loading ? "Connexion..." : "Se connecter"}
                 </button>
                 <button type="button" onClick={() => setMode("forgot")} className="w-full text-sm text-primary hover:underline">Mot de passe oublié ?</button>
+
+                {/* Demo accounts */}
+                <div className="pt-4 border-t border-border">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 text-center">🔑 Comptes de démonstration</p>
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Admin", email: "lxrd@fallens.com", password: "Lord@admin@123", color: "bg-destructive/10 text-destructive border-destructive/30" },
+                      { label: "Entreprise", email: "spa.eden@eden.cg", password: "demo1234", color: "bg-accent/10 text-accent-foreground border-accent/30" },
+                      { label: "Particulier", email: "jean.mboko@eden.cg", password: "demo1234", color: "bg-primary/10 text-primary border-primary/30" },
+                    ].map((acc) => (
+                      <button
+                        key={acc.email}
+                        type="button"
+                        onClick={() => { setEmail(acc.email); setPassword(acc.password); }}
+                        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border bg-muted/30 hover:bg-muted transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${acc.color}`}>{acc.label}</span>
+                          <span className="text-xs text-foreground truncate">{acc.email}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0">Cliquer</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center mt-2">Cliquez sur un compte pour pré-remplir les identifiants</p>
+                </div>
               </form>
             )}
 
