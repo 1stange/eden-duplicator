@@ -18,6 +18,7 @@ export default function Publish() {
   const [isPremium, setIsPremium] = useState(false);
   const [isUrgent, setIsUrgent] = useState(false);
   const [error, setError] = useState("");
+  const [imageAspect, setImageAspect] = useState<"16:9" | "1:1">("16:9");
   const [imageFiles, setImageFiles] = useState<{ file: File; preview: string }[]>([]);
   const [videoFile, setVideoFile] = useState<{ file: File; preview: string } | null>(null);
   const [uploading, setUploading] = useState(false);
