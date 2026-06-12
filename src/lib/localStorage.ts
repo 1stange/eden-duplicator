@@ -1,196 +1,388 @@
-import { Ad, User, Message, Notification, HistoryEntry, AppSettings, Review } from "@/types";
-import { sampleAds, sampleUsers, sampleMessages, sampleNotifications, sampleReviews } from "./seedData";
+// LocalStorage-backed data layer. All snake_case to mirror the previous Supabase shapes.
+import {
+  sampleProfiles, sampleAds, sampleConversations, sampleMessages,
+  sampleNotifications, sampleReviews, sampleReports, sampleFavorites,
+  MockProfile, MockAd,
+} from "./seedData";
 
 const KEYS = {
-  USER: "eden_current_user",
-  USERS: "eden_users",
+  CURRENT_USER_ID: "eden_current_user_id",
+  PROFILES: "eden_profiles",
   ADS: "eden_ads",
   FAVORITES: "eden_favorites",
+  CONVERSATIONS: "eden_conversations",
   MESSAGES: "eden_messages",
   NOTIFICATIONS: "eden_notifications",
   HISTORY: "eden_history",
-  SETTINGS: "eden_settings",
   REVIEWS: "eden_reviews",
-  INITIALIZED: "eden_initialized_v2",
-  WELCOME_SEEN: "eden_welcome_seen",
+  REPORTS: "eden_reports",
+  USER_ROLES: "eden_user_roles",
+  SETTINGS: "eden_settings",
+  INITIALIZED: "eden_initialized_v4",
 };
 
 function get<T>(key: string, fallback: T): T {
   try {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : fallback;
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
   }
 }
-
 function set(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+const uid = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const now = () => new Date().toISOString();
+
 export function initializeData() {
-  if (!localStorage.getItem(KEYS.INITIALIZED)) {
-    set(KEYS.USERS, sampleUsers);
-    set(KEYS.ADS, sampleAds);
-    set(KEYS.MESSAGES, sampleMessages);
-    set(KEYS.NOTIFICATIONS, sampleNotifications);
-    set(KEYS.REVIEWS, sampleReviews);
-    set(KEYS.FAVORITES, []);
-    set(KEYS.HISTORY, []);
-    set(KEYS.SETTINGS, { notifications: true, language: "fr", currency: "FCFA", theme: "light" });
-    localStorage.setItem(KEYS.INITIALIZED, "true");
-  }
+  if (localStorage.getItem(KEYS.INITIALIZED) === "true") return;
+  set(KEYS.PROFILES, sampleProfiles);
+  set(KEYS.ADS, sampleAds);
+  set(KEYS.CONVERSATIONS, sampleConversations);
+  set(KEYS.MESSAGES, sampleMessages);
+  set(KEYS.NOTIFICATIONS, sampleNotifications);
+  set(KEYS.REVIEWS, sampleReviews);
+  set(KEYS.REPORTS, sampleReports);
+  set(KEYS.FAVORITES, sampleFavorites);
+  set(KEYS.HISTORY, []);
+  set(KEYS.USER_ROLES, [
+    { user_id: "user-admin", role: "admin" },
+  ]);
+  set(KEYS.SETTINGS, { notifications: true, language: "fr", currency: "FCFA", theme: "light" });
+  localStorage.setItem(KEYS.INITIALIZED, "true");
 }
 
-export function hasSeenWelcome(): boolean {
-  return localStorage.getItem(KEYS.WELCOME_SEEN) === "true";
-}
+// Ensure seed always available on import
+initializeData();
 
-export function setWelcomeSeen() {
-  localStorage.setItem(KEYS.WELCOME_SEEN, "true");
-}
-
-// Auth
-export const auth = {
-  login(email: string, password: string): User | null {
-    const users = get<User[]>(KEYS.USERS, []);
-    const user = users.find((u) => u.email === email);
-    if (user) { set(KEYS.USER, user); return user; }
-    return null;
+// ---------- AUTH ----------
+export const authStore = {
+  getCurrentUserId(): string | null {
+    return localStorage.getItem(KEYS.CURRENT_USER_ID);
   },
-  signup(data: Omit<User, "id" | "createdAt" | "avatar">): User {
-    const users = get<User[]>(KEYS.USERS, []);
-    const newUser: User = { ...data, id: `user-${Date.now()}`, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`, createdAt: new Date().toISOString().split("T")[0] };
-    users.push(newUser);
-    set(KEYS.USERS, users);
-    set(KEYS.USER, newUser);
-    return newUser;
+  setCurrentUserId(id: string | null) {
+    if (id) localStorage.setItem(KEYS.CURRENT_USER_ID, id);
+    else localStorage.removeItem(KEYS.CURRENT_USER_ID);
   },
-  logout() { localStorage.removeItem(KEYS.USER); },
-  getCurrentUser(): User | null { return get<User | null>(KEYS.USER, null); },
-  updateUser(updates: Partial<User>): User | null {
-    const user = this.getCurrentUser();
-    if (!user) return null;
-    const updated = { ...user, ...updates };
-    set(KEYS.USER, updated);
-    const users = get<User[]>(KEYS.USERS, []);
-    const idx = users.findIndex((u) => u.id === user.id);
-    if (idx >= 0) { users[idx] = updated; set(KEYS.USERS, users); }
-    return updated;
+  login(email: string, password: string): MockProfile | null {
+    const profiles = get<MockProfile[]>(KEYS.PROFILES, []);
+    const p = profiles.find((u) => u.email.toLowerCase() === email.toLowerCase() && (u as any).password === password);
+    if (!p) return null;
+    this.setCurrentUserId(p.id);
+    return p;
+  },
+  signup(data: Partial<MockProfile> & { email: string; password: string; name: string }): { profile?: MockProfile; error?: string } {
+    const profiles = get<MockProfile[]>(KEYS.PROFILES, []);
+    if (profiles.some((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
+      return { error: "Un compte existe déjà avec cet email." };
+    }
+    const id = uid("user");
+    const profile: MockProfile = {
+      id,
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      phone: data.phone ?? null,
+      city: data.city ?? "Brazzaville",
+      avatar: data.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.name)}`,
+      first_name: data.first_name ?? null,
+      last_name: data.last_name ?? null,
+      pseudo: data.pseudo ?? null,
+      gender: data.gender ?? null,
+      role: (data.role as any) ?? "particulier",
+      company_name: data.company_name ?? null,
+      birth_date: data.birth_date ?? null,
+      is_certified: false,
+      created_at: now(),
+    };
+    profiles.push(profile);
+    set(KEYS.PROFILES, profiles);
+    this.setCurrentUserId(id);
+    return { profile };
+  },
+  logout() { this.setCurrentUserId(null); },
+  getProfile(id: string): MockProfile | null {
+    return get<MockProfile[]>(KEYS.PROFILES, []).find((p) => p.id === id) || null;
+  },
+  updateProfile(id: string, updates: Partial<MockProfile>): MockProfile | null {
+    const profiles = get<MockProfile[]>(KEYS.PROFILES, []);
+    const idx = profiles.findIndex((p) => p.id === id);
+    if (idx < 0) return null;
+    profiles[idx] = { ...profiles[idx], ...updates };
+    set(KEYS.PROFILES, profiles);
+    return profiles[idx];
+  },
+  getAllProfiles(): MockProfile[] {
+    return get<MockProfile[]>(KEYS.PROFILES, []);
+  },
+  hasRole(userId: string, role: string): boolean {
+    const profile = this.getProfile(userId);
+    if (profile?.role === role) return true;
+    const roles = get<{ user_id: string; role: string }[]>(KEYS.USER_ROLES, []);
+    return roles.some((r) => r.user_id === userId && r.role === role);
   },
 };
 
-// Ads
-export const ads = {
-  getAll(): Ad[] { return get<Ad[]>(KEYS.ADS, []); },
-  getById(id: string): Ad | undefined { return this.getAll().find((a) => a.id === id); },
-  create(adData: Omit<Ad, "id" | "createdAt" | "updatedAt" | "views">): Ad {
-    const all = this.getAll();
-    const newAd: Ad = { ...adData, id: `ad-${Date.now()}`, views: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+// ---------- ADS ----------
+export const adsStore = {
+  list(filters?: { category?: string; city?: string; query?: string; status?: string }): MockAd[] {
+    let list = get<MockAd[]>(KEYS.ADS, []);
+    const status = filters?.status ?? "active";
+    list = list.filter((a) => a.status === status);
+    if (filters?.category) list = list.filter((a) => a.category === filters.category);
+    if (filters?.city) list = list.filter((a) => a.city === filters.city);
+    if (filters?.query) {
+      const q = filters.query.toLowerCase();
+      list = list.filter((a) => a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q));
+    }
+    return list.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+  listAll(): MockAd[] {
+    return get<MockAd[]>(KEYS.ADS, []).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+  byId(id: string): MockAd | null {
+    return get<MockAd[]>(KEYS.ADS, []).find((a) => a.id === id) || null;
+  },
+  byUser(userId: string): MockAd[] {
+    return get<MockAd[]>(KEYS.ADS, []).filter((a) => a.user_id === userId);
+  },
+  byIds(ids: string[]): MockAd[] {
+    const set = new Set(ids);
+    return get<MockAd[]>(KEYS.ADS, []).filter((a) => set.has(a.id));
+  },
+  create(ad: Partial<MockAd>): MockAd {
+    const all = get<MockAd[]>(KEYS.ADS, []);
+    const newAd: MockAd = {
+      id: uid("ad"),
+      title: ad.title || "",
+      description: ad.description || "",
+      price: ad.price ?? 0,
+      currency: ad.currency || "FCFA",
+      category: ad.category || "produits-adultes",
+      city: ad.city || "Brazzaville",
+      images: ad.images || [],
+      video: ad.video || null,
+      user_id: ad.user_id!,
+      user_name: ad.user_name!,
+      user_phone: ad.user_phone || "",
+      is_premium: !!ad.is_premium,
+      is_urgent: !!ad.is_urgent,
+      views: 0,
+      status: "active",
+      created_at: now(),
+      updated_at: now(),
+    };
     all.unshift(newAd);
     set(KEYS.ADS, all);
     return newAd;
   },
-  update(id: string, updates: Partial<Ad>): Ad | undefined {
-    const all = this.getAll();
-    const idx = all.findIndex((a) => a.id === id);
-    if (idx < 0) return undefined;
-    all[idx] = { ...all[idx], ...updates, updatedAt: new Date().toISOString() };
+  update(id: string, updates: Partial<MockAd>): MockAd | null {
+    const all = get<MockAd[]>(KEYS.ADS, []);
+    const i = all.findIndex((a) => a.id === id);
+    if (i < 0) return null;
+    all[i] = { ...all[i], ...updates, updated_at: now() };
     set(KEYS.ADS, all);
-    return all[idx];
+    return all[i];
   },
-  delete(id: string): boolean {
-    const all = this.getAll();
-    const filtered = all.filter((a) => a.id !== id);
-    set(KEYS.ADS, filtered);
-    return filtered.length < all.length;
-  },
-  incrementViews(id: string) { const ad = this.getById(id); if (ad) this.update(id, { views: ad.views + 1 }); },
-  search(query: string, filters?: { category?: string; city?: string; minPrice?: number; maxPrice?: number }): Ad[] {
-    let results = this.getAll();
-    if (query) { const q = query.toLowerCase(); results = results.filter((a) => a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q)); }
-    if (filters?.category) results = results.filter((a) => a.category === filters.category);
-    if (filters?.city) results = results.filter((a) => a.city === filters.city);
-    if (filters?.minPrice) results = results.filter((a) => a.price >= filters.minPrice!);
-    if (filters?.maxPrice) results = results.filter((a) => a.price <= filters.maxPrice!);
-    return results;
+  incrementViews(id: string) {
+    const ad = this.byId(id);
+    if (ad) this.update(id, { views: (ad.views || 0) + 1 });
   },
 };
 
-// Favorites
-export const favorites = {
-  getAll(): string[] { return get<string[]>(KEYS.FAVORITES, []); },
-  add(adId: string) { const all = this.getAll(); if (!all.includes(adId)) { all.push(adId); set(KEYS.FAVORITES, all); } },
-  remove(adId: string) { set(KEYS.FAVORITES, this.getAll().filter((id) => id !== adId)); },
-  isFavorite(adId: string): boolean { return this.getAll().includes(adId); },
-  toggle(adId: string): boolean { if (this.isFavorite(adId)) { this.remove(adId); return false; } this.add(adId); return true; },
-};
-
-// Messages
-export const messages = {
-  getAll(): Message[] { return get<Message[]>(KEYS.MESSAGES, []); },
-  getForUser(userId: string): Message[] { return this.getAll().filter((m) => m.senderId === userId || m.receiverId === userId); },
-  send(msg: Omit<Message, "id" | "createdAt" | "read">): Message {
-    const all = this.getAll();
-    const newMsg: Message = { ...msg, id: `msg-${Date.now()}`, read: false, createdAt: new Date().toISOString() };
-    all.unshift(newMsg);
-    set(KEYS.MESSAGES, all);
-    return newMsg;
+// ---------- FAVORITES ----------
+export const favoritesStore = {
+  forUser(userId: string): string[] {
+    return get<{ user_id: string; ad_id: string }[]>(KEYS.FAVORITES, [])
+      .filter((f) => f.user_id === userId)
+      .map((f) => f.ad_id);
   },
-  markAsRead(id: string) { const all = this.getAll(); const msg = all.find((m) => m.id === id); if (msg) { msg.read = true; set(KEYS.MESSAGES, all); } },
-  getUnreadCount(userId: string): number { return this.getAll().filter((m) => m.receiverId === userId && !m.read).length; },
-};
-
-// Notifications
-export const notifications = {
-  getAll(): Notification[] { return get<Notification[]>(KEYS.NOTIFICATIONS, []); },
-  getForUser(userId: string): Notification[] { return this.getAll().filter((n) => n.userId === userId); },
-  add(notif: Omit<Notification, "id" | "createdAt" | "read">): Notification {
-    const all = this.getAll();
-    const n: Notification = { ...notif, id: `notif-${Date.now()}`, read: false, createdAt: new Date().toISOString() };
-    all.unshift(n);
-    set(KEYS.NOTIFICATIONS, all);
-    return n;
+  toggle(userId: string, adId: string): boolean {
+    const list = get<{ user_id: string; ad_id: string }[]>(KEYS.FAVORITES, []);
+    const idx = list.findIndex((f) => f.user_id === userId && f.ad_id === adId);
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      set(KEYS.FAVORITES, list);
+      return false;
+    }
+    list.push({ user_id: userId, ad_id: adId });
+    set(KEYS.FAVORITES, list);
+    return true;
   },
-  markAsRead(id: string) { const all = this.getAll(); const n = all.find((x) => x.id === id); if (n) { n.read = true; set(KEYS.NOTIFICATIONS, all); } },
-  markAllAsRead(userId: string) { const all = this.getAll(); all.forEach((n) => { if (n.userId === userId) n.read = true; }); set(KEYS.NOTIFICATIONS, all); },
-  getUnreadCount(userId: string): number { return this.getAll().filter((n) => n.userId === userId && !n.read).length; },
 };
 
-// History
-export const history = {
-  getAll(): HistoryEntry[] { return get<HistoryEntry[]>(KEYS.HISTORY, []); },
-  getForUser(userId: string): HistoryEntry[] { return this.getAll().filter((h) => h.userId === userId); },
-  add(entry: Omit<HistoryEntry, "id" | "createdAt">) {
-    const all = this.getAll();
-    all.unshift({ ...entry, id: `hist-${Date.now()}`, createdAt: new Date().toISOString() });
-    if (all.length > 100) all.pop();
-    set(KEYS.HISTORY, all);
+// ---------- CONVERSATIONS & MESSAGES ----------
+export interface MockConversation {
+  id: string; participant_1: string; participant_2: string;
+  ad_id: string; ad_title: string; created_at: string; updated_at: string;
+  messages?: MockMessage[];
+}
+export interface MockMessage {
+  id: string; conversation_id: string; sender_id: string;
+  content: string; read: boolean; created_at: string;
+}
+
+export const conversationsStore = {
+  forUser(userId: string): MockConversation[] {
+    const convs = get<MockConversation[]>(KEYS.CONVERSATIONS, []);
+    const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
+    return convs
+      .filter((c) => c.participant_1 === userId || c.participant_2 === userId)
+      .map((c) => ({ ...c, messages: msgs.filter((m) => m.conversation_id === c.id) }))
+      .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
   },
-  clear(userId: string) { set(KEYS.HISTORY, this.getAll().filter((h) => h.userId !== userId)); },
+  messages(conversationId: string): MockMessage[] {
+    return get<MockMessage[]>(KEYS.MESSAGES, [])
+      .filter((m) => m.conversation_id === conversationId)
+      .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  },
+  ensureConversation(userId: string, receiverId: string, adId: string, adTitle: string): MockConversation {
+    const convs = get<MockConversation[]>(KEYS.CONVERSATIONS, []);
+    let conv = convs.find((c) => c.ad_id === adId && (
+      (c.participant_1 === userId && c.participant_2 === receiverId) ||
+      (c.participant_1 === receiverId && c.participant_2 === userId)
+    ));
+    if (!conv) {
+      conv = {
+        id: uid("conv"), participant_1: userId, participant_2: receiverId,
+        ad_id: adId, ad_title: adTitle, created_at: now(), updated_at: now(),
+      };
+      convs.push(conv);
+      set(KEYS.CONVERSATIONS, convs);
+    } else {
+      conv.updated_at = now();
+      set(KEYS.CONVERSATIONS, convs);
+    }
+    return conv;
+  },
+  touch(conversationId: string) {
+    const convs = get<MockConversation[]>(KEYS.CONVERSATIONS, []);
+    const c = convs.find((x) => x.id === conversationId);
+    if (c) { c.updated_at = now(); set(KEYS.CONVERSATIONS, convs); }
+  },
+  sendMessage(conversationId: string, senderId: string, content: string): MockMessage {
+    const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
+    const m: MockMessage = { id: uid("msg"), conversation_id: conversationId, sender_id: senderId, content, read: false, created_at: now() };
+    msgs.push(m);
+    set(KEYS.MESSAGES, msgs);
+    this.touch(conversationId);
+
+    // Add notification to the other participant
+    const conv = get<MockConversation[]>(KEYS.CONVERSATIONS, []).find((c) => c.id === conversationId);
+    if (conv) {
+      const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
+      const sender = authStore.getProfile(senderId);
+      notificationsStore.add({
+        user_id: otherId,
+        title: "💬 Nouveau message",
+        message: `${sender?.name || "Quelqu'un"}: ${content.slice(0, 60)}`,
+        type: "message",
+      });
+    }
+    return m;
+  },
+  markRead(conversationId: string, currentUserId: string) {
+    const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
+    let changed = false;
+    msgs.forEach((m) => {
+      if (m.conversation_id === conversationId && m.sender_id !== currentUserId && !m.read) {
+        m.read = true; changed = true;
+      }
+    });
+    if (changed) set(KEYS.MESSAGES, msgs);
+  },
 };
 
-// Reviews
-export const reviews = {
-  getAll(): Review[] { return get<Review[]>(KEYS.REVIEWS, []); },
-  getForAd(adId: string): Review[] { return this.getAll().filter((r) => r.adId === adId); },
-  add(review: Omit<Review, "id" | "createdAt">): Review {
-    const all = this.getAll();
-    const r: Review = { ...review, id: `rev-${Date.now()}`, createdAt: new Date().toISOString() };
+// ---------- REVIEWS ----------
+export const reviewsStore = {
+  forAd(adId: string) {
+    return get<any[]>(KEYS.REVIEWS, [])
+      .filter((r) => r.ad_id === adId)
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+  add(review: { ad_id: string; user_id: string; user_name: string; rating: number; comment: string }) {
+    const all = get<any[]>(KEYS.REVIEWS, []);
+    const r = { ...review, id: uid("rev"), created_at: now() };
     all.unshift(r);
     set(KEYS.REVIEWS, all);
     return r;
   },
-  getAverageRating(adId: string): number {
-    const adReviews = this.getForAd(adId);
-    if (adReviews.length === 0) return 0;
-    return adReviews.reduce((sum, r) => sum + r.rating, 0) / adReviews.length;
+};
+
+// ---------- REPORTS ----------
+export const reportsStore = {
+  list() {
+    const reports = get<any[]>(KEYS.REPORTS, []);
+    const ads = get<MockAd[]>(KEYS.ADS, []);
+    return reports
+      .map((r) => ({ ...r, ads: ads.find((a) => a.id === r.ad_id) || null }))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+  add(report: { ad_id: string; reporter_id: string; reason: string; details?: string }) {
+    const all = get<any[]>(KEYS.REPORTS, []);
+    const r = { ...report, id: uid("rep"), status: "pending", reviewed_by: null, reviewed_at: null, created_at: now() };
+    all.unshift(r);
+    set(KEYS.REPORTS, all);
+    return r;
+  },
+  update(reportId: string, status: string, reviewerId: string) {
+    const all = get<any[]>(KEYS.REPORTS, []);
+    const r = all.find((x) => x.id === reportId);
+    if (r) { r.status = status; r.reviewed_by = reviewerId; r.reviewed_at = now(); set(KEYS.REPORTS, all); }
+    return r;
   },
 };
 
-// Settings
-export const settings = {
-  get(): AppSettings { return get<AppSettings>(KEYS.SETTINGS, { notifications: true, language: "fr", currency: "FCFA", theme: "light" }); },
-  update(updates: Partial<AppSettings>): AppSettings { const s = { ...this.get(), ...updates }; set(KEYS.SETTINGS, s); return s; },
-  reset(): AppSettings { const d: AppSettings = { notifications: true, language: "fr", currency: "FCFA", theme: "light" }; set(KEYS.SETTINGS, d); return d; },
+// ---------- NOTIFICATIONS ----------
+export const notificationsStore = {
+  forUser(userId: string) {
+    return get<any[]>(KEYS.NOTIFICATIONS, [])
+      .filter((n) => n.user_id === userId)
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  },
+  add(notif: { user_id: string; title: string; message: string; type: string }) {
+    const all = get<any[]>(KEYS.NOTIFICATIONS, []);
+    const n = { ...notif, id: uid("notif"), read: false, created_at: now() };
+    all.unshift(n);
+    set(KEYS.NOTIFICATIONS, all);
+    window.dispatchEvent(new CustomEvent("eden:notification", { detail: n }));
+    return n;
+  },
+  markRead(id: string) {
+    const all = get<any[]>(KEYS.NOTIFICATIONS, []);
+    const n = all.find((x) => x.id === id);
+    if (n) { n.read = true; set(KEYS.NOTIFICATIONS, all); }
+  },
+  markAllRead(userId: string) {
+    const all = get<any[]>(KEYS.NOTIFICATIONS, []);
+    all.forEach((n) => { if (n.user_id === userId) n.read = true; });
+    set(KEYS.NOTIFICATIONS, all);
+  },
+};
+
+// ---------- HISTORY ----------
+export const historyStore = {
+  forUser(userId: string) {
+    return get<any[]>(KEYS.HISTORY, [])
+      .filter((h) => h.user_id === userId)
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 100);
+  },
+  add(entry: { user_id: string; ad_id: string; ad_title: string; ad_image: string; ad_price: number; action: string }) {
+    const all = get<any[]>(KEYS.HISTORY, []);
+    all.unshift({ ...entry, id: uid("hist"), created_at: now() });
+    if (all.length > 500) all.length = 500;
+    set(KEYS.HISTORY, all);
+  },
+  clear(userId: string) {
+    set(KEYS.HISTORY, get<any[]>(KEYS.HISTORY, []).filter((h) => h.user_id !== userId));
+  },
+};
+
+// ---------- SETTINGS ----------
+export const settingsStore = {
+  get() { return get<any>(KEYS.SETTINGS, { notifications: true, language: "fr", currency: "FCFA", theme: "light" }); },
+  update(updates: any) { const s = { ...this.get(), ...updates }; set(KEYS.SETTINGS, s); return s; },
 };

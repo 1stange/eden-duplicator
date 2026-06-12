@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +27,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -42,10 +43,12 @@ function AppRoutes() {
   }
 
   if (!isAuthenticated) {
+    // Welcome is shown on every visit while not authenticated.
     return (
       <Routes>
         <Route path="/welcome" element={<Welcome />} />
-        <Route path="*" element={<Auth />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="*" element={<Navigate to={location.pathname === "/auth" ? "/auth" : "/welcome"} replace />} />
       </Routes>
     );
   }
@@ -55,6 +58,8 @@ function AppRoutes() {
       <RealtimeNotifications />
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/welcome" element={<Navigate to="/" replace />} />
+        <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/ad/:id" element={<AdDetails />} />
         <Route path="/favorites" element={<Favorites />} />

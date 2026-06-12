@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { settings as settingsStorage } from "@/lib/localStorage";
+import { settingsStore as settingsStorage } from "@/lib/localStorage";
 
 type Theme = "light" | "dark";
 

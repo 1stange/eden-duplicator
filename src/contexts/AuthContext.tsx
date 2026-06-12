@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { authStore } from "@/lib/localStorage";
 
 export interface Profile {
   id: string;
@@ -16,12 +15,13 @@ export interface Profile {
   role: string | null;
   company_name: string | null;
   birth_date: string | null;
+  is_certified?: boolean;
   created_at: string;
 }
 
 interface AuthContextType {
   user: Profile | null;
-  supabaseUser: SupabaseUser | null;
+  supabaseUser: null;
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (data: SignupData) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
@@ -48,101 +48,84 @@ interface SignupData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function toProfile(p: any | null): Profile | null {
+  if (!p) return null;
+  // Strip password before exposing
+  const { password, ...safe } = p;
+  return safe as Profile;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (data) setUser(data as Profile);
-    // Check admin role
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    setIsAdmin(roles?.some((r: any) => r.role === "admin") || false);
-    return data as Profile | null;
+  const refresh = () => {
+    const id = authStore.getCurrentUserId();
+    setUser(id ? toProfile(authStore.getProfile(id)) : null);
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        // Use setTimeout to avoid potential deadlock with Supabase client
-        setTimeout(() => fetchProfile(session.user.id), 0);
-      } else {
-        setSupabaseUser(null);
-        setUser(null);
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        fetchProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    refresh();
+    setLoading(false);
+    const handler = () => refresh();
+    window.addEventListener("storage", handler);
+    window.addEventListener("eden:auth-change", handler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("eden:auth-change", handler);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    const p = authStore.login(email, password);
+    if (!p) return { error: "Email ou mot de passe incorrect." };
+    setUser(toProfile(p));
+    window.dispatchEvent(new CustomEvent("eden:auth-change"));
     return {};
   };
 
   const signup = async (data: SignupData) => {
-    const { data: authData, error } = await supabase.auth.signUp({
+    const result = authStore.signup({
       email: data.email,
       password: data.password,
-      options: {
-        data: { name: `${data.firstName} ${data.lastName}` }
-      }
+      name: `${data.firstName} ${data.lastName}`.trim() || data.name,
+      phone: data.phone,
+      city: data.city,
+      role: data.role as any,
+      company_name: data.companyName || null,
+      pseudo: data.pseudo || null,
+      gender: data.gender,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      birth_date: data.birthDate,
     });
-    if (error) return { error: error.message };
-    
-    // Update profile with extra data
-    if (authData.user) {
-      await supabase.from("profiles").update({
-        name: `${data.firstName} ${data.lastName}`,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        phone: data.phone,
-        city: data.city,
-        role: data.role,
-        company_name: data.companyName || null,
-        pseudo: data.pseudo || null,
-        gender: data.gender,
-        birth_date: data.birthDate,
-      }).eq("id", authData.user.id);
-      
-      await fetchProfile(authData.user.id);
-    }
+    if (result.error) return { error: result.error };
+    setUser(toProfile(result.profile));
+    window.dispatchEvent(new CustomEvent("eden:auth-change"));
     return {};
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    authStore.logout();
     setUser(null);
-    setSupabaseUser(null);
-    setIsAdmin(false);
+    window.dispatchEvent(new CustomEvent("eden:auth-change"));
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return null;
-    const { data, error } = await supabase.from("profiles").update(updates).eq("id", user.id).select().single();
-    if (data && !error) {
-      setUser(data as Profile);
-      return data as Profile;
-    }
-    return null;
+    const updated = authStore.updateProfile(user.id, updates as any);
+    const p = toProfile(updated);
+    if (p) setUser(p);
+    return p;
   };
 
+  const isAdmin = !!user && (user.role === "admin" || authStore.hasRole(user.id, "admin"));
+
   return (
-    <AuthContext.Provider value={{ user, supabaseUser, login, signup, logout, updateProfile, isAuthenticated: !!user, isAdmin, loading }}>
+    <AuthContext.Provider value={{
+      user, supabaseUser: null, login, signup, logout, updateProfile,
+      isAuthenticated: !!user, isAdmin, loading,
+    }}>
       {children}
     </AuthContext.Provider>
   );
