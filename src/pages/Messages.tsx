@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversations, useConversationMessages, useSendMessageInConversation, useMarkMessagesRead } from "@/hooks/useSupabaseData";
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, Send, Check, CheckCheck, ArrowLeft, Search, MoreVertical } from "lucide-react";
 
@@ -21,16 +20,15 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, selectedConvId]);
 
-  // Realtime subscription
+  // Local "realtime" via custom DOM event from data layer
   useEffect(() => {
-    const channel = supabase.channel("messages-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        qc.invalidateQueries({ queryKey: ["messages"] });
-        qc.invalidateQueries({ queryKey: ["conversations"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+    const handler = () => {
+      qc.invalidateQueries({ queryKey: ["messages"] });
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+    };
+    window.addEventListener("eden:notification", handler);
+    return () => window.removeEventListener("eden:notification", handler);
+  }, [qc]);
 
   if (!user) return null;
 
