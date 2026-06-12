@@ -101,10 +101,26 @@ export default function Profile() {
           )}
 
           {isCertified && (
-            <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+            <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-eden-success/15 text-eden-success text-xs font-semibold border border-eden-success/30">
               <Shield className="h-3 w-3" /> Compte certifié
             </span>
           )}
+
+          {/* Quick stats */}
+          <div className="grid grid-cols-3 gap-2 mt-5 w-full max-w-xs">
+            <div className="eden-card p-2.5 text-center">
+              <p className="text-base font-bold text-primary">{user?.role === "entreprise" ? "—" : "0"}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Annonces</p>
+            </div>
+            <div className="eden-card p-2.5 text-center">
+              <p className="text-base font-bold text-accent">0</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Favoris</p>
+            </div>
+            <div className="eden-card p-2.5 text-center">
+              <p className="text-base font-bold text-eden-success">0</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Avis</p>
+            </div>
+          </div>
         </motion.div>
 
         {/* Info cards (read mode) */}
