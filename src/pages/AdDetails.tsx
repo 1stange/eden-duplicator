@@ -84,34 +84,42 @@ export default function AdDetails() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Image gallery */}
         <div>
-          <div className="relative rounded-xl overflow-hidden aspect-[4/3] bg-muted">
-            <img src={allImages[activeImage] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-cover" />
+          <div className="relative rounded-2xl overflow-hidden aspect-video bg-muted shadow-md">
+            <img src={allImages[activeImage] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain" />
+            <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
             <div className="absolute top-3 left-3 flex gap-2">
-              {ad.is_premium && <span className="eden-badge-premium">⭐ Premium</span>}
-              {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground">🔥 Urgent</span>}
+              {ad.is_premium && <span className="eden-badge-premium shadow-md">⭐ Premium</span>}
+              {ad.is_urgent && <span className="eden-badge bg-destructive text-destructive-foreground shadow-md">🔥 Urgent</span>}
             </div>
             <div className="absolute top-3 right-3 flex gap-2">
-              <button onClick={() => toggleFavMut.mutate(ad.id)} className="p-2 rounded-full bg-card/80 backdrop-blur-sm shadow-md">
+              <button onClick={() => toggleFavMut.mutate(ad.id)} className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
                 <Heart className={`h-5 w-5 ${isFav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
-              <button className="p-2 rounded-full bg-card/80 backdrop-blur-sm shadow-md">
+              <button className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
                 <Share2 className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
+            {allImages.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                {allImages.map((_: string, i: number) => (
+                  <span key={i} className={`h-1.5 rounded-full transition-all ${i === activeImage ? "w-6 bg-white" : "w-1.5 bg-white/50"}`} />
+                ))}
+              </div>
+            )}
           </div>
           {/* Thumbnails */}
           {allImages.length > 1 && (
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-3">
               {allImages.map((img: string, i: number) => (
-                <button key={i} onClick={() => setActiveImage(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === activeImage ? "border-primary" : "border-transparent"}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                <button key={i} onClick={() => setActiveImage(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 bg-muted transition-all ${i === activeImage ? "border-primary scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}>
+                  <img src={img} alt="" className="w-full h-full object-contain" />
                 </button>
               ))}
             </div>
           )}
           {/* Video */}
           {(ad as any).video && (
-            <div className="mt-3 rounded-xl overflow-hidden border">
+            <div className="mt-3 rounded-2xl overflow-hidden border bg-black">
               <video src={(ad as any).video} controls className="w-full aspect-video" />
             </div>
           )}
