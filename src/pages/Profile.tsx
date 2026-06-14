@@ -31,7 +31,13 @@ export default function Profile() {
     if (!file || !user) return;
     setUploading(true);
     const url = await uploadAvatar(user.id, file);
-    if (url) setAvatar(url);
+    if (url) {
+      setAvatar(url);
+      // Persist immediately so it survives refresh / logout
+      await updateProfile({ avatar: url });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    }
     setUploading(false);
   };
 
