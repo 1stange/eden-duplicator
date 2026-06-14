@@ -19,7 +19,10 @@ const KEYS = {
   USER_ROLES: "eden_user_roles",
   SETTINGS: "eden_settings",
   INITIALIZED: "eden_initialized_v4",
+  ADS_SEED_VERSION: "eden_ads_seed_version",
 };
+
+const ADS_SEED_VERSION = "v2-2026-05-22";
 
 function get<T>(key: string, fallback: T): T {
   try {
