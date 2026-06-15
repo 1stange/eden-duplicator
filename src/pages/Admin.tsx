@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useReports, useUpdateReport, useAllAds, useUpdateAdStatus, useAllProfiles, useCertifyUser } from "@/hooks/useSupabaseData";
+import { useReports, useUpdateReport, useAllAds, useUpdateAdStatus, useAllProfiles, useCertifyUser } from "@/hooks/useLocalData";
 import { Shield, AlertTriangle, Check, X, Eye, Ban, BadgeCheck, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";

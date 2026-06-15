@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications, useMarkNotifRead, useMarkAllNotifsRead } from "@/hooks/useSupabaseData";
+import { useNotifications, useMarkNotifRead, useMarkAllNotifsRead } from "@/hooks/useLocalData";
 import { Bell, Check, CheckCheck, Info, MessageSquare, AlertTriangle, ShoppingBag } from "lucide-react";
 
 const typeIcons: Record<string, React.ReactNode> = {

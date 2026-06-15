@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAds, useUserAds, useFavorites, useConversations, useHistory } from "@/hooks/useSupabaseData";
+import { useAds, useUserAds, useFavorites, useConversations, useHistory } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
 import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users } from "lucide-react";
 

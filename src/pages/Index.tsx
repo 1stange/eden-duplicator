@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAds, useFavorites, useToggleFavorite, useUserAds, useConversations, useReports, useAllAds, useAllProfiles } from "@/hooks/useSupabaseData";
+import { useAds, useFavorites, useToggleFavorite, useUserAds, useConversations, useReports, useAllAds, useAllProfiles, useFavoriteAds, useHistory } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
-import { Heart, Eye, MapPin, Star, ChevronRight, PlusCircle, TrendingUp, Search, MessageSquare, BarChart3, Shield, Users, AlertTriangle, Ban, BadgeCheck, Building2, Briefcase } from "lucide-react";
+import { Heart, Eye, MapPin, Star, ChevronRight, PlusCircle, TrendingUp, Search, MessageSquare, BarChart3, Shield, Users, AlertTriangle, Ban, BadgeCheck, Building2, Briefcase, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-brazzaville.jpg";
 import { useMemo } from "react";
@@ -213,9 +213,26 @@ function ParticulierDashboard() {
   const { user } = useAuth();
   const { data: allAds = [] } = useAds();
   const { data: favs = [] } = useFavorites();
+  const { data: favAds = [] } = useFavoriteAds();
+  const { data: history = [] } = useHistory();
   const toggleFavMut = useToggleFavorite();
   const premiumAds = allAds.filter((a: any) => a.is_premium);
   const recentAds = allAds.slice(0, 12);
+
+  // Recommandés : basé sur catégories des favoris + historique
+  const recommended = useMemo(() => {
+    const interestedCats = new Set<string>();
+    favAds.forEach((a: any) => interestedCats.add(a.category));
+    history.forEach((h: any) => {
+      const ad = allAds.find((a: any) => a.id === h.ad_id);
+      if (ad) interestedCats.add(ad.category);
+    });
+    if (interestedCats.size === 0) return [];
+    const favIds = new Set(favs);
+    return allAds
+      .filter((a: any) => interestedCats.has(a.category) && !favIds.has(a.id))
+      .slice(0, 8);
+  }, [allAds, favAds, history, favs]);
 
   const toggleFav = (adId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -291,6 +308,33 @@ function ParticulierDashboard() {
             ))}
           </div>
         </motion.div>
+
+        {/* Recommandés pour toi */}
+        {recommended.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="eden-section-title">Recommandés pour toi</h2>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {recommended.map((ad: any, i: number) => (
+                <motion.div key={ad.id} initial={{ opacity: 0, x: 15 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -3 }} onClick={() => navigate(`/ad/${ad.id}`)}
+                  className="eden-card min-w-[200px] max-w-[220px] cursor-pointer overflow-hidden group flex-shrink-0">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                    <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground font-medium">Pour toi</span>
+                  </div>
+                  <div className="p-2.5">
+                    <h3 className="font-medium text-xs text-foreground truncate">{ad.title}</h3>
+                    <p className="text-primary font-bold text-xs mt-1">{formatPrice(ad.price, ad.currency)}</p>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{ad.city}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Premium */}
         {premiumAds.length > 0 && (

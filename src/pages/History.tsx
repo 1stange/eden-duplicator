@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useHistory, useClearHistory } from "@/hooks/useSupabaseData";
+import { useHistory, useClearHistory } from "@/hooks/useLocalData";
 import { Clock, Eye, Heart, Phone, PlusCircle, Trash2 } from "lucide-react";
 
 const actionIcons: Record<string, React.ReactNode> = {

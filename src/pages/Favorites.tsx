@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useFavoriteAds, useToggleFavorite } from "@/hooks/useSupabaseData";
+import { useFavoriteAds, useToggleFavorite } from "@/hooks/useLocalData";
 import { Heart, MapPin, Eye, Trash2 } from "lucide-react";
 
 function formatPrice(price: number, currency: string) {

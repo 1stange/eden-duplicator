@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAd, useReviews, useCreateReview, useFavorites, useToggleFavorite, useSendMessage, useIncrementViews, useAddHistory, useCreateReport, useSuggestedAds, useProfile } from "@/hooks/useSupabaseData";
+import { useAd, useReviews, useCreateReview, useFavorites, useToggleFavorite, useSendMessage, useIncrementViews, useAddHistory, useCreateReport, useSuggestedAds, useProfile } from "@/hooks/useLocalData";
 import { ArrowLeft, Heart, Share2, MapPin, Eye, Clock, Phone, MessageSquare, User, Send, Star, Flag, BadgeCheck, Video } from "lucide-react";
 
 function formatPrice(price: number, currency: string) {
@@ -95,7 +95,14 @@ export default function AdDetails() {
               <button onClick={() => toggleFavMut.mutate(ad.id)} className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
                 <Heart className={`h-5 w-5 ${isFav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
-              <button className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform">
+              <button onClick={async () => {
+                const url = window.location.href;
+                const title = ad.title;
+                try {
+                  if (navigator.share) await navigator.share({ title, text: ad.description?.slice(0, 100), url });
+                  else { await navigator.clipboard.writeText(url); alert("Lien copié dans le presse-papier ✅"); }
+                } catch {}
+              }} className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform" aria-label="Partager">
                 <Share2 className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>

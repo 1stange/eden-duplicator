@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, ACCENT_COLORS } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   Settings as SettingsIcon, Moon, Sun, Bell, Globe, Lock, Shield, Eye, EyeOff,
   Trash2, LogOut, ChevronRight, BadgeCheck, Smartphone, Mail, HelpCircle, FileText,
-  Languages, MapPin, Database, AlertTriangle,
+  Languages, MapPin, Database, AlertTriangle, Download, Palette, KeyRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -24,11 +24,13 @@ function savePrefs(prefs: Record<string, any>) {
 }
 
 export default function Settings() {
-  const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { theme, toggleTheme, accent, setAccent } = useTheme();
+  const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<Record<string, any>>(loadPrefs());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newEmail, setNewEmail] = useState(user?.email || "");
+  const [emailSaved, setEmailSaved] = useState(false);
 
   useEffect(() => { savePrefs(prefs); }, [prefs]);
 
@@ -39,6 +41,27 @@ export default function Settings() {
     if (!confirm("Vider le cache local (favoris, historique, brouillons) ? Cette action est irréversible.")) return;
     ["eden_history", "eden_favorites_cache", "eden_drafts"].forEach((k) => localStorage.removeItem(k));
     alert("Cache vidé ✅");
+  };
+
+  const handleExportData = () => {
+    if (!user) return;
+    const dump: Record<string, any> = { exportedAt: new Date().toISOString(), userId: user.id };
+    Object.keys(localStorage).filter((k) => k.startsWith("eden_")).forEach((k) => {
+      try { dump[k] = JSON.parse(localStorage.getItem(k) || "null"); } catch { dump[k] = localStorage.getItem(k); }
+    });
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `eden-export-${user.id}-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) return alert("Email invalide");
+    await updateProfile({ email: newEmail } as any);
+    setEmailSaved(true);
+    setTimeout(() => setEmailSaved(false), 2500);
   };
 
   const handleDeleteAccount = () => {
@@ -97,6 +120,35 @@ export default function Settings() {
               </select>
             }
           />
+          <Row
+            icon={<Palette className="h-4 w-4 text-primary" />}
+            title="Couleur d'accent"
+            subtitle={ACCENT_COLORS[accent]?.label || "Rose Eden"}
+            action={
+              <div className="flex items-center gap-1.5">
+                {Object.entries(ACCENT_COLORS).map(([k, v]) => (
+                  <button key={k} type="button" onClick={() => setAccent(k as any)}
+                    className={`w-5 h-5 rounded-full border-2 transition-all ${accent === k ? "border-foreground scale-110" : "border-transparent"}`}
+                    style={{ background: `hsl(${v.hsl})` }} aria-label={v.label} />
+                ))}
+              </div>
+            }
+          />
+        </Section>
+
+        {/* Compte – email */}
+        <Section title="Email du compte" icon={<Mail className="h-4 w-4" />}>
+          <div className="px-4 py-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Modifier l'adresse email associée à votre compte.</p>
+            <div className="flex gap-2">
+              <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                className="flex-1 text-sm bg-muted border border-input rounded-md px-3 py-2" />
+              <button onClick={handleChangeEmail} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90">
+                Enregistrer
+              </button>
+            </div>
+            {emailSaved && <p className="text-xs text-eden-success">✅ Email mis à jour</p>}
+          </div>
         </Section>
 
         {/* Notifications */}
@@ -132,7 +184,9 @@ export default function Settings() {
         </Section>
 
         {/* Données */}
-        <Section title="Données & stockage" icon={<Database className="h-4 w-4" />}>
+        <Section title="Données & stockage (RGPD)" icon={<Database className="h-4 w-4" />}>
+          <Row icon={<Download className="h-4 w-4 text-primary" />} title="Exporter mes données" subtitle="Télécharger un fichier JSON avec toutes vos données locales"
+            action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={handleExportData} />
           <Row icon={<Database className="h-4 w-4 text-primary" />} title="Vider le cache local" subtitle="Libère de l'espace dans le navigateur"
             action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={handleClearCache} />
         </Section>

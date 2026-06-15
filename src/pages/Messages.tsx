@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useConversations, useConversationMessages, useSendMessageInConversation, useMarkMessagesRead } from "@/hooks/useSupabaseData";
+import { useConversations, useConversationMessages, useSendMessageInConversation, useMarkMessagesRead } from "@/hooks/useLocalData";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, Send, Check, CheckCheck, ArrowLeft, Search, MoreVertical } from "lucide-react";
 
