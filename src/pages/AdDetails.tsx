@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAd, useReviews, useCreateReview, useFavorites, useToggleFavorite, useSendMessage, useIncrementViews, useAddHistory, useCreateReport, useSuggestedAds, useProfile } from "@/hooks/useSupabaseData";
+import { useAd, useReviews, useCreateReview, useFavorites, useToggleFavorite, useSendMessage, useIncrementViews, useAddHistory, useCreateReport, useSuggestedAds, useProfile } from "@/hooks/useLocalData";
 import { ArrowLeft, Heart, Share2, MapPin, Eye, Clock, Phone, MessageSquare, User, Send, Star, Flag, BadgeCheck, Video } from "lucide-react";
 
 function formatPrice(price: number, currency: string) {

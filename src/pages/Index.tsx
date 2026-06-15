@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAds, useFavorites, useToggleFavorite, useUserAds, useConversations, useReports, useAllAds, useAllProfiles } from "@/hooks/useSupabaseData";
+import { useAds, useFavorites, useToggleFavorite, useUserAds, useConversations, useReports, useAllAds, useAllProfiles } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
 import { Heart, Eye, MapPin, Star, ChevronRight, PlusCircle, TrendingUp, Search, MessageSquare, BarChart3, Shield, Users, AlertTriangle, Ban, BadgeCheck, Building2, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";

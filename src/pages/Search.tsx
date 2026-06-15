@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAds, useFavorites, useToggleFavorite } from "@/hooks/useSupabaseData";
+import { useAds, useFavorites, useToggleFavorite } from "@/hooks/useLocalData";
 import { CATEGORIES, CONGO_CITIES, CITY_COORDS } from "@/types";
 import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
