@@ -3,6 +3,7 @@ import {
   PlusCircle, LogOut, Leaf, UserCircle, Shield, Users, BadgeCheck, Eye,
   Briefcase, Building2, AlertTriangle,
 } from "lucide-react";
+import { useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -92,11 +93,21 @@ export function AppSidebar() {
 
         {/* Role badge */}
         {!collapsed && (
-          <div className="px-4 mb-4">
+          <div className="px-4 mb-3">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/50">
               <RoleIcon className={`h-4 w-4 ${roleColor} shrink-0`} />
               <span className={`text-xs font-medium ${roleColor}`}>{roleLabel}</span>
             </div>
+          </div>
+        )}
+
+        {/* Quick search */}
+        {!collapsed && (
+          <div className="px-4 mb-3">
+            <form onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value.trim(); navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search"); }} className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/50" />
+              <input name="q" type="text" placeholder="Recherche rapide..." className="w-full h-8 pl-8 pr-2 text-xs rounded-lg bg-sidebar-accent/40 border border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-ring" />
+            </form>
           </div>
         )}
 

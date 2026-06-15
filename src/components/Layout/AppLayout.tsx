@@ -1,12 +1,11 @@
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Onboarding } from "@/components/Onboarding";
 
 export function AppLayout({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -24,10 +23,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Bell className="h-5 w-5 text-muted-foreground" />
             </button>
           </header>
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto">{children}</main>
         </div>
+        <Onboarding />
       </div>
     </SidebarProvider>
   );
