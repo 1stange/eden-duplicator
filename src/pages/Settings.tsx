@@ -120,6 +120,35 @@ export default function Settings() {
               </select>
             }
           />
+          <Row
+            icon={<Palette className="h-4 w-4 text-primary" />}
+            title="Couleur d'accent"
+            subtitle={ACCENT_COLORS[accent]?.label || "Rose Eden"}
+            action={
+              <div className="flex items-center gap-1.5">
+                {Object.entries(ACCENT_COLORS).map(([k, v]) => (
+                  <button key={k} type="button" onClick={() => setAccent(k as any)}
+                    className={`w-5 h-5 rounded-full border-2 transition-all ${accent === k ? "border-foreground scale-110" : "border-transparent"}`}
+                    style={{ background: `hsl(${v.hsl})` }} aria-label={v.label} />
+                ))}
+              </div>
+            }
+          />
+        </Section>
+
+        {/* Compte – email */}
+        <Section title="Email du compte" icon={<Mail className="h-4 w-4" />}>
+          <div className="px-4 py-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Modifier l'adresse email associée à votre compte.</p>
+            <div className="flex gap-2">
+              <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                className="flex-1 text-sm bg-muted border border-input rounded-md px-3 py-2" />
+              <button onClick={handleChangeEmail} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90">
+                Enregistrer
+              </button>
+            </div>
+            {emailSaved && <p className="text-xs text-eden-success">✅ Email mis à jour</p>}
+          </div>
         </Section>
 
         {/* Notifications */}
@@ -155,7 +184,9 @@ export default function Settings() {
         </Section>
 
         {/* Données */}
-        <Section title="Données & stockage" icon={<Database className="h-4 w-4" />}>
+        <Section title="Données & stockage (RGPD)" icon={<Database className="h-4 w-4" />}>
+          <Row icon={<Download className="h-4 w-4 text-primary" />} title="Exporter mes données" subtitle="Télécharger un fichier JSON avec toutes vos données locales"
+            action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={handleExportData} />
           <Row icon={<Database className="h-4 w-4 text-primary" />} title="Vider le cache local" subtitle="Libère de l'espace dans le navigateur"
             action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={handleClearCache} />
         </Section>
