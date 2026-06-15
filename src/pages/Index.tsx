@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAds, useFavorites, useToggleFavorite, useUserAds, useConversations, useReports, useAllAds, useAllProfiles } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
-import { Heart, Eye, MapPin, Star, ChevronRight, PlusCircle, TrendingUp, Search, MessageSquare, BarChart3, Shield, Users, AlertTriangle, Ban, BadgeCheck, Building2, Briefcase } from "lucide-react";
+import { Heart, Eye, MapPin, Star, ChevronRight, PlusCircle, TrendingUp, Search, MessageSquare, BarChart3, Shield, Users, AlertTriangle, Ban, BadgeCheck, Building2, Briefcase, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-brazzaville.jpg";
 import { useMemo } from "react";
@@ -213,9 +213,26 @@ function ParticulierDashboard() {
   const { user } = useAuth();
   const { data: allAds = [] } = useAds();
   const { data: favs = [] } = useFavorites();
+  const { data: favAds = [] } = useFavoriteAds();
+  const { data: history = [] } = useHistory();
   const toggleFavMut = useToggleFavorite();
   const premiumAds = allAds.filter((a: any) => a.is_premium);
   const recentAds = allAds.slice(0, 12);
+
+  // Recommandés : basé sur catégories des favoris + historique
+  const recommended = useMemo(() => {
+    const interestedCats = new Set<string>();
+    favAds.forEach((a: any) => interestedCats.add(a.category));
+    history.forEach((h: any) => {
+      const ad = allAds.find((a: any) => a.id === h.ad_id);
+      if (ad) interestedCats.add(ad.category);
+    });
+    if (interestedCats.size === 0) return [];
+    const favIds = new Set(favs);
+    return allAds
+      .filter((a: any) => interestedCats.has(a.category) && !favIds.has(a.id))
+      .slice(0, 8);
+  }, [allAds, favAds, history, favs]);
 
   const toggleFav = (adId: string, e: React.MouseEvent) => {
     e.stopPropagation();
