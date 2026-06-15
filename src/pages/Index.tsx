@@ -309,6 +309,33 @@ function ParticulierDashboard() {
           </div>
         </motion.div>
 
+        {/* Recommandés pour toi */}
+        {recommended.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="eden-section-title">Recommandés pour toi</h2>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {recommended.map((ad: any, i: number) => (
+                <motion.div key={ad.id} initial={{ opacity: 0, x: 15 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -3 }} onClick={() => navigate(`/ad/${ad.id}`)}
+                  className="eden-card min-w-[200px] max-w-[220px] cursor-pointer overflow-hidden group flex-shrink-0">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                    <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground font-medium">Pour toi</span>
+                  </div>
+                  <div className="p-2.5">
+                    <h3 className="font-medium text-xs text-foreground truncate">{ad.title}</h3>
+                    <p className="text-primary font-bold text-xs mt-1">{formatPrice(ad.price, ad.currency)}</p>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{ad.city}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Premium */}
         {premiumAds.length > 0 && (
           <div className="mb-8">
