@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, ACCENT_COLORS } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   Settings as SettingsIcon, Moon, Sun, Bell, Globe, Lock, Shield, Eye, EyeOff,
   Trash2, LogOut, ChevronRight, BadgeCheck, Smartphone, Mail, HelpCircle, FileText,
-  Languages, MapPin, Database, AlertTriangle,
+  Languages, MapPin, Database, AlertTriangle, Download, Palette, KeyRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -24,11 +24,13 @@ function savePrefs(prefs: Record<string, any>) {
 }
 
 export default function Settings() {
-  const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { theme, toggleTheme, accent, setAccent } = useTheme();
+  const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<Record<string, any>>(loadPrefs());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newEmail, setNewEmail] = useState(user?.email || "");
+  const [emailSaved, setEmailSaved] = useState(false);
 
   useEffect(() => { savePrefs(prefs); }, [prefs]);
 
@@ -39,6 +41,27 @@ export default function Settings() {
     if (!confirm("Vider le cache local (favoris, historique, brouillons) ? Cette action est irréversible.")) return;
     ["eden_history", "eden_favorites_cache", "eden_drafts"].forEach((k) => localStorage.removeItem(k));
     alert("Cache vidé ✅");
+  };
+
+  const handleExportData = () => {
+    if (!user) return;
+    const dump: Record<string, any> = { exportedAt: new Date().toISOString(), userId: user.id };
+    Object.keys(localStorage).filter((k) => k.startsWith("eden_")).forEach((k) => {
+      try { dump[k] = JSON.parse(localStorage.getItem(k) || "null"); } catch { dump[k] = localStorage.getItem(k); }
+    });
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `eden-export-${user.id}-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) return alert("Email invalide");
+    await updateProfile({ email: newEmail } as any);
+    setEmailSaved(true);
+    setTimeout(() => setEmailSaved(false), 2500);
   };
 
   const handleDeleteAccount = () => {
