@@ -11,7 +11,21 @@ const statusColors: Record<string, string> = {
 };
 
 const reasonLabels: Record<string, string> = {
-  spam: "Spam", inappropriate: "Contenu inapproprié", fraud: "Arnaque", underage: "Mineurs", other: "Autre",
+  scam: "🚨 Arnaque",
+  illegal: "⛔ Contenu illégal",
+  fake: "🎭 Faux profil",
+  underage: "👶 Mineurs",
+  spam: "Spam",
+  inappropriate: "Contenu inapproprié",
+  fraud: "Arnaque (legacy)",
+  other: "Autre",
+};
+
+const reasonColors: Record<string, string> = {
+  scam: "bg-destructive/20 text-destructive",
+  illegal: "bg-destructive/20 text-destructive",
+  fake: "bg-accent/20 text-accent",
+  underage: "bg-destructive/20 text-destructive",
 };
 
 export default function Admin() {
