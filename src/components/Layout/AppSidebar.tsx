@@ -114,6 +114,24 @@ export function AppSidebar() {
           </div>
         )}
 
+        {/* Language selector */}
+        {!collapsed && (
+          <div className="px-4 mb-3">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sidebar-accent/30 border border-sidebar-border">
+              <Languages className="h-3.5 w-3.5 text-sidebar-foreground/60 shrink-0" />
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="flex-1 bg-transparent text-xs text-sidebar-foreground focus:outline-none cursor-pointer"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code} className="bg-sidebar text-sidebar-foreground">{l.flag} {l.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* Main nav */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-[10px] uppercase tracking-wider">Navigation</SidebarGroupLabel>
