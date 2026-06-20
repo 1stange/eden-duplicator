@@ -203,7 +203,11 @@ export default function SearchPage() {
                 <p className="text-primary font-bold text-xs sm:text-sm mt-1">{formatPrice(ad.price, ad.currency)}</p>
                 <div className="flex items-center justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{ad.city}</span>
-                  <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{ad.views}</span>
+                  {ad._distance != null ? (
+                    <span className="flex items-center gap-1 text-primary font-medium"><Navigation className="h-3 w-3" />{ad._distance} km</span>
+                  ) : (
+                    <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{ad.views}</span>
+                  )}
                 </div>
               </div>
             </div>
