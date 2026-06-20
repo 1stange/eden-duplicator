@@ -139,14 +139,38 @@ export function useSendMessageInConversation() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ conversationId, content }: { conversationId: string; content: string }) => {
+    mutationFn: async ({ conversationId, content, type, media }: { conversationId: string; content: string; type?: "text" | "image" | "audio"; media?: string | null }) => {
       if (!user) throw new Error("Not authenticated");
-      return conversationsStore.sendMessage(conversationId, user.id, content);
+      return conversationsStore.sendMessage(conversationId, user.id, content, { type, media });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", vars.conversationId] });
     },
+  });
+}
+
+export function useToggleBlock() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (otherId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      return authStore.toggleBlock(user.id, otherId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["blocked"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+}
+
+export function useBlockedUsers() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["blocked", user?.id],
+    queryFn: async () => (user ? authStore.getBlocked(user.id) : []),
+    enabled: !!user,
   });
 }
 
