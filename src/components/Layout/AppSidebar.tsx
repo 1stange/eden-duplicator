@@ -1,12 +1,14 @@
 import {
   Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings,
   PlusCircle, LogOut, Leaf, UserCircle, Shield, Users, BadgeCheck, Eye,
-  Briefcase, Building2, AlertTriangle,
+  Briefcase, Building2, AlertTriangle, Languages,
 } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LANGUAGES } from "@/lib/i18n";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -55,6 +57,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
 
   const userRole = user?.role || "particulier";
   const isEntreprise = userRole === "entreprise";
