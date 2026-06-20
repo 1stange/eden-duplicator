@@ -216,10 +216,11 @@ export default function AdDetails() {
               <h3 className="font-semibold text-foreground text-sm flex items-center gap-2"><Flag className="h-4 w-4 text-destructive" /> Signaler</h3>
               <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} className="eden-input text-sm" required>
                 <option value="">Raison du signalement...</option>
+                <option value="scam">🚨 Arnaque</option>
+                <option value="illegal">⛔ Contenu illégal</option>
+                <option value="fake">🎭 Faux profil</option>
+                <option value="underage">👶 Contenu impliquant des mineurs</option>
                 <option value="spam">Spam / Publicité abusive</option>
-                <option value="inappropriate">Contenu inapproprié</option>
-                <option value="fraud">Arnaque / Fraude</option>
-                <option value="underage">Contenu impliquant des mineurs</option>
                 <option value="other">Autre</option>
               </select>
               <textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Détails supplémentaires..." className="eden-input min-h-[60px] text-sm" />
