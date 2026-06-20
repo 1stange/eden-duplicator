@@ -1,12 +1,14 @@
 import {
   Home, Search, Heart, MessageSquare, Bell, BarChart3, Clock, Settings,
   PlusCircle, LogOut, Leaf, UserCircle, Shield, Users, BadgeCheck, Eye,
-  Briefcase, Building2, AlertTriangle,
+  Briefcase, Building2, AlertTriangle, Languages,
 } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LANGUAGES } from "@/lib/i18n";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -55,6 +57,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
 
   const userRole = user?.role || "particulier";
   const isEntreprise = userRole === "entreprise";
@@ -108,6 +111,24 @@ export function AppSidebar() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/50" />
               <input name="q" type="text" placeholder="Recherche rapide..." className="w-full h-8 pl-8 pr-2 text-xs rounded-lg bg-sidebar-accent/40 border border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-sidebar-ring" />
             </form>
+          </div>
+        )}
+
+        {/* Language selector */}
+        {!collapsed && (
+          <div className="px-4 mb-3">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sidebar-accent/30 border border-sidebar-border">
+              <Languages className="h-3.5 w-3.5 text-sidebar-foreground/60 shrink-0" />
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="flex-1 bg-transparent text-xs text-sidebar-foreground focus:outline-none cursor-pointer"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code} className="bg-sidebar text-sidebar-foreground">{l.flag} {l.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 

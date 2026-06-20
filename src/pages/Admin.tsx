@@ -11,7 +11,21 @@ const statusColors: Record<string, string> = {
 };
 
 const reasonLabels: Record<string, string> = {
-  spam: "Spam", inappropriate: "Contenu inapproprié", fraud: "Arnaque", underage: "Mineurs", other: "Autre",
+  scam: "🚨 Arnaque",
+  illegal: "⛔ Contenu illégal",
+  fake: "🎭 Faux profil",
+  underage: "👶 Mineurs",
+  spam: "Spam",
+  inappropriate: "Contenu inapproprié",
+  fraud: "Arnaque (legacy)",
+  other: "Autre",
+};
+
+const reasonColors: Record<string, string> = {
+  scam: "bg-destructive/20 text-destructive",
+  illegal: "bg-destructive/20 text-destructive",
+  fake: "bg-accent/20 text-accent",
+  underage: "bg-destructive/20 text-destructive",
 };
 
 export default function Admin() {
@@ -84,9 +98,9 @@ export default function Admin() {
                     <img src={report.ads?.images?.[0] || "/placeholder.svg"} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-foreground truncate">{report.ads?.title || "Annonce"}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusColors[report.status]}`}>{report.status}</span>
-                        <span className="text-xs text-muted-foreground">{reasonLabels[report.reason] || report.reason}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${reasonColors[report.reason] || "bg-muted text-muted-foreground"}`}>{reasonLabels[report.reason] || report.reason}</span>
                       </div>
                       {report.details && <p className="text-xs text-muted-foreground mt-1">{report.details}</p>}
                     </div>

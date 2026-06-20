@@ -137,6 +137,20 @@ export const authStore = {
     const roles = get<{ user_id: string; role: string }[]>(KEYS.USER_ROLES, []);
     return roles.some((r) => r.user_id === userId && r.role === role);
   },
+  getBlocked(userId: string): string[] {
+    const p = this.getProfile(userId) as any;
+    return Array.isArray(p?.blocked) ? p.blocked : [];
+  },
+  isBlocked(userId: string, otherId: string): boolean {
+    return this.getBlocked(userId).includes(otherId);
+  },
+  toggleBlock(userId: string, otherId: string): boolean {
+    const blocked = this.getBlocked(userId);
+    const i = blocked.indexOf(otherId);
+    if (i >= 0) blocked.splice(i, 1); else blocked.push(otherId);
+    this.updateProfile(userId, { blocked } as any);
+    return blocked.includes(otherId);
+  },
 };
 
 // ---------- ADS ----------
@@ -236,6 +250,7 @@ export interface MockConversation {
 export interface MockMessage {
   id: string; conversation_id: string; sender_id: string;
   content: string; read: boolean; created_at: string;
+  type?: "text" | "image" | "audio"; media?: string | null;
 }
 
 export const conversationsStore = {
@@ -276,9 +291,13 @@ export const conversationsStore = {
     const c = convs.find((x) => x.id === conversationId);
     if (c) { c.updated_at = now(); set(KEYS.CONVERSATIONS, convs); }
   },
-  sendMessage(conversationId: string, senderId: string, content: string): MockMessage {
+  sendMessage(conversationId: string, senderId: string, content: string, opts?: { type?: "text" | "image" | "audio"; media?: string | null }): MockMessage {
     const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
-    const m: MockMessage = { id: uid("msg"), conversation_id: conversationId, sender_id: senderId, content, read: false, created_at: now() };
+    const m: MockMessage = {
+      id: uid("msg"), conversation_id: conversationId, sender_id: senderId,
+      content, read: false, created_at: now(),
+      type: opts?.type || "text", media: opts?.media ?? null,
+    };
     msgs.push(m);
     set(KEYS.MESSAGES, msgs);
     this.touch(conversationId);
@@ -288,10 +307,11 @@ export const conversationsStore = {
     if (conv) {
       const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
       const sender = authStore.getProfile(senderId);
+      const preview = m.type === "image" ? "📷 Image" : m.type === "audio" ? "🎤 Vocal" : content;
       notificationsStore.add({
         user_id: otherId,
         title: "💬 Nouveau message",
-        message: `${sender?.name || "Quelqu'un"}: ${content.slice(0, 60)}`,
+        message: `${sender?.name || "Quelqu'un"}: ${preview.slice(0, 60)}`,
         type: "message",
       });
     }

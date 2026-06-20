@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAds, useFavorites, useToggleFavorite } from "@/hooks/useLocalData";
+import { useAds, useFavorites, useToggleFavorite, useAllProfiles } from "@/hooks/useLocalData";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { distanceFromUserToAd } from "@/lib/geo";
 import { CATEGORIES, CONGO_CITIES, CITY_COORDS } from "@/types";
-import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List } from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List, BadgeCheck, Navigation } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -23,26 +25,42 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
-  const [query, setQuery] = useState("");
+  const initialQuery = searchParams.get("q") || "";
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [city, setCity] = useState("");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [maxDistance, setMaxDistance] = useState<number>(0); // 0 = no limit
+  const [certifiedOnly, setCertifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc">("recent");
+  const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc" | "distance">("recent");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
+  const { pos, error: geoError, loading: geoLoading, request: requestGeo } = useGeolocation();
   const { data: allAds = [] } = useAds({ category: category || undefined, city: city || undefined, query: query || undefined });
   const { data: favs = [] } = useFavorites();
+  const { data: profiles = [] } = useAllProfiles();
   const toggleFavMut = useToggleFavorite();
 
+  const certifiedSet = useMemo(() => new Set(profiles.filter((p: any) => p.is_certified).map((p: any) => p.id)), [profiles]);
+
   const results = useMemo(() => {
-    let res = [...allAds];
+    let res = allAds.map((a: any) => ({ ...a, _distance: distanceFromUserToAd(pos, a) }));
+    const min = priceMin === "" ? null : Number(priceMin);
+    const max = priceMax === "" ? null : Number(priceMax);
+    if (min !== null && !isNaN(min)) res = res.filter((a: any) => (a.price || 0) >= min);
+    if (max !== null && !isNaN(max)) res = res.filter((a: any) => (a.price || 0) <= max);
+    if (certifiedOnly) res = res.filter((a: any) => certifiedSet.has(a.user_id));
+    if (maxDistance > 0 && pos) res = res.filter((a: any) => a._distance != null && a._distance <= maxDistance);
     if (sortBy === "price-asc") res.sort((a: any, b: any) => a.price - b.price);
-    if (sortBy === "price-desc") res.sort((a: any, b: any) => b.price - a.price);
+    else if (sortBy === "price-desc") res.sort((a: any, b: any) => b.price - a.price);
+    else if (sortBy === "distance" && pos) res.sort((a: any, b: any) => (a._distance ?? 9999) - (b._distance ?? 9999));
     return res;
-  }, [allAds, sortBy]);
+  }, [allAds, sortBy, pos, priceMin, priceMax, certifiedOnly, maxDistance, certifiedSet]);
 
   const toggleFav = (adId: string, e: React.MouseEvent) => { e.stopPropagation(); toggleFavMut.mutate(adId); };
-  const activeFilters = [category, city].filter(Boolean).length;
+  const activeFilters = [category, city, certifiedOnly ? "cert" : "", priceMin || priceMax ? "price" : "", maxDistance > 0 ? "dist" : ""].filter(Boolean).length;
 
   const adsByCity = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -90,10 +108,41 @@ export default function SearchPage() {
                 <option value="recent">Plus récents</option>
                 <option value="price-asc">Prix croissant</option>
                 <option value="price-desc">Prix décroissant</option>
+                <option value="distance" disabled={!pos}>Distance {pos ? "" : "(géoloc requise)"}</option>
               </select>
             </div>
           </div>
-          {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); }} className="text-xs text-primary hover:underline">Effacer les filtres</button>}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Prix min (FCFA)</label>
+              <input type="number" inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="0" className="eden-input text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Prix max (FCFA)</label>
+              <input type="number" inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="∞" className="eden-input text-sm" />
+            </div>
+            <label className="flex items-end gap-2 text-xs font-medium text-foreground cursor-pointer pb-2">
+              <input type="checkbox" checked={certifiedOnly} onChange={(e) => setCertifiedOnly(e.target.checked)} className="accent-primary" />
+              <BadgeCheck className="h-4 w-4 text-eden-success" /> Certifiés uniquement
+            </label>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-muted-foreground">Distance max : {maxDistance > 0 ? `${maxDistance} km` : "illimitée"}</label>
+              {!pos && (
+                <button type="button" onClick={requestGeo} className="text-[11px] text-primary hover:underline flex items-center gap-1">
+                  <Navigation className="h-3 w-3" /> {geoLoading ? "Localisation…" : "Activer ma position"}
+                </button>
+              )}
+              {pos && <span className="text-[11px] text-eden-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Position OK</span>}
+            </div>
+            <input type="range" min={0} max={1500} step={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} disabled={!pos} className="w-full accent-primary disabled:opacity-50" />
+            {geoError && !pos && <p className="text-[10px] text-destructive mt-1">{geoError}</p>}
+          </div>
+
+          {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); setCertifiedOnly(false); setPriceMin(""); setPriceMax(""); setMaxDistance(0); }} className="text-xs text-primary hover:underline">Effacer tous les filtres</button>}
         </div>
       )}
 
@@ -154,7 +203,11 @@ export default function SearchPage() {
                 <p className="text-primary font-bold text-xs sm:text-sm mt-1">{formatPrice(ad.price, ad.currency)}</p>
                 <div className="flex items-center justify-between mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{ad.city}</span>
-                  <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{ad.views}</span>
+                  {ad._distance != null ? (
+                    <span className="flex items-center gap-1 text-primary font-medium"><Navigation className="h-3 w-3" />{ad._distance} km</span>
+                  ) : (
+                    <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{ad.views}</span>
+                  )}
                 </div>
               </div>
             </div>

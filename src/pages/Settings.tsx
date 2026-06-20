@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useTheme, ACCENT_COLORS } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LANGUAGES } from "@/lib/i18n";
 import {
   Settings as SettingsIcon, Moon, Sun, Bell, Globe, Lock, Shield, Eye, EyeOff,
   Trash2, LogOut, ChevronRight, BadgeCheck, Smartphone, Mail, HelpCircle, FileText,
@@ -27,6 +29,7 @@ export default function Settings() {
   const { theme, toggleTheme, accent, setAccent } = useTheme();
   const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [prefs, setPrefs] = useState<Record<string, any>>(loadPrefs());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newEmail, setNewEmail] = useState(user?.email || "");
@@ -36,6 +39,10 @@ export default function Settings() {
 
   const toggle = (k: SettingsKey) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
   const set = (k: SettingsKey, v: any) => setPrefs((p) => ({ ...p, [k]: v }));
+  const changeLanguage = (lang: string) => {
+    set("language", lang);
+    i18n.changeLanguage(lang);
+  };
 
   const handleClearCache = () => {
     if (!confirm("Vider le cache local (favoris, historique, brouillons) ? Cette action est irréversible.")) return;
@@ -110,13 +117,13 @@ export default function Settings() {
           />
           <Row
             icon={<Languages className="h-4 w-4 text-primary" />}
-            title="Langue"
-            subtitle="Français (Congo)"
+            title={t("language")}
+            subtitle={LANGUAGES.find((l) => l.code === i18n.language)?.label || "Français"}
             action={
-              <select value={prefs.language || "fr"} onChange={(e) => set("language", e.target.value)} className="text-xs bg-muted border border-input rounded-md px-2 py-1">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-                <option value="ln">Lingala</option>
+              <select value={i18n.language} onChange={(e) => changeLanguage(e.target.value)} className="text-xs bg-muted border border-input rounded-md px-2 py-1">
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                ))}
               </select>
             }
           />
