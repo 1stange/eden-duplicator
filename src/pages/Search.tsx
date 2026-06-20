@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAds, useFavorites, useToggleFavorite } from "@/hooks/useLocalData";
+import { useAds, useFavorites, useToggleFavorite, useAllProfiles } from "@/hooks/useLocalData";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { distanceFromUserToAd } from "@/lib/geo";
 import { CATEGORIES, CONGO_CITIES, CITY_COORDS } from "@/types";
-import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List } from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal, X, Heart, Eye, MapPin, Map as MapIcon, List, BadgeCheck, Navigation } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -23,26 +25,42 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
-  const [query, setQuery] = useState("");
+  const initialQuery = searchParams.get("q") || "";
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [city, setCity] = useState("");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [maxDistance, setMaxDistance] = useState<number>(0); // 0 = no limit
+  const [certifiedOnly, setCertifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc">("recent");
+  const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc" | "distance">("recent");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
+  const { pos, error: geoError, loading: geoLoading, request: requestGeo } = useGeolocation();
   const { data: allAds = [] } = useAds({ category: category || undefined, city: city || undefined, query: query || undefined });
   const { data: favs = [] } = useFavorites();
+  const { data: profiles = [] } = useAllProfiles();
   const toggleFavMut = useToggleFavorite();
 
+  const certifiedSet = useMemo(() => new Set(profiles.filter((p: any) => p.is_certified).map((p: any) => p.id)), [profiles]);
+
   const results = useMemo(() => {
-    let res = [...allAds];
+    let res = allAds.map((a: any) => ({ ...a, _distance: distanceFromUserToAd(pos, a) }));
+    const min = priceMin === "" ? null : Number(priceMin);
+    const max = priceMax === "" ? null : Number(priceMax);
+    if (min !== null && !isNaN(min)) res = res.filter((a: any) => (a.price || 0) >= min);
+    if (max !== null && !isNaN(max)) res = res.filter((a: any) => (a.price || 0) <= max);
+    if (certifiedOnly) res = res.filter((a: any) => certifiedSet.has(a.user_id));
+    if (maxDistance > 0 && pos) res = res.filter((a: any) => a._distance != null && a._distance <= maxDistance);
     if (sortBy === "price-asc") res.sort((a: any, b: any) => a.price - b.price);
-    if (sortBy === "price-desc") res.sort((a: any, b: any) => b.price - a.price);
+    else if (sortBy === "price-desc") res.sort((a: any, b: any) => b.price - a.price);
+    else if (sortBy === "distance" && pos) res.sort((a: any, b: any) => (a._distance ?? 9999) - (b._distance ?? 9999));
     return res;
-  }, [allAds, sortBy]);
+  }, [allAds, sortBy, pos, priceMin, priceMax, certifiedOnly, maxDistance, certifiedSet]);
 
   const toggleFav = (adId: string, e: React.MouseEvent) => { e.stopPropagation(); toggleFavMut.mutate(adId); };
-  const activeFilters = [category, city].filter(Boolean).length;
+  const activeFilters = [category, city, certifiedOnly ? "cert" : "", priceMin || priceMax ? "price" : "", maxDistance > 0 ? "dist" : ""].filter(Boolean).length;
 
   const adsByCity = useMemo(() => {
     const map: Record<string, any[]> = {};
