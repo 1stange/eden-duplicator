@@ -108,10 +108,41 @@ export default function SearchPage() {
                 <option value="recent">Plus récents</option>
                 <option value="price-asc">Prix croissant</option>
                 <option value="price-desc">Prix décroissant</option>
+                <option value="distance" disabled={!pos}>Distance {pos ? "" : "(géoloc requise)"}</option>
               </select>
             </div>
           </div>
-          {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); }} className="text-xs text-primary hover:underline">Effacer les filtres</button>}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Prix min (FCFA)</label>
+              <input type="number" inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="0" className="eden-input text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Prix max (FCFA)</label>
+              <input type="number" inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="∞" className="eden-input text-sm" />
+            </div>
+            <label className="flex items-end gap-2 text-xs font-medium text-foreground cursor-pointer pb-2">
+              <input type="checkbox" checked={certifiedOnly} onChange={(e) => setCertifiedOnly(e.target.checked)} className="accent-primary" />
+              <BadgeCheck className="h-4 w-4 text-eden-success" /> Certifiés uniquement
+            </label>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-muted-foreground">Distance max : {maxDistance > 0 ? `${maxDistance} km` : "illimitée"}</label>
+              {!pos && (
+                <button type="button" onClick={requestGeo} className="text-[11px] text-primary hover:underline flex items-center gap-1">
+                  <Navigation className="h-3 w-3" /> {geoLoading ? "Localisation…" : "Activer ma position"}
+                </button>
+              )}
+              {pos && <span className="text-[11px] text-eden-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Position OK</span>}
+            </div>
+            <input type="range" min={0} max={1500} step={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} disabled={!pos} className="w-full accent-primary disabled:opacity-50" />
+            {geoError && !pos && <p className="text-[10px] text-destructive mt-1">{geoError}</p>}
+          </div>
+
+          {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); setCertifiedOnly(false); setPriceMin(""); setPriceMax(""); setMaxDistance(0); }} className="text-xs text-primary hover:underline">Effacer tous les filtres</button>}
         </div>
       )}
 
