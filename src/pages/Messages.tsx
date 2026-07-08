@@ -16,10 +16,14 @@ const TYPING_EVENT = "eden:typing";
 
 export default function Messages() {
   const { user } = useAuth();
-  const { data: conversations = [] } = useConversations();
+  const [showBlockedList, setShowBlockedList] = useState(false);
+  const { data: activeConvs = [] } = useConversations();
+  const { data: blockedConvs = [] } = useBlockedConversations();
+  const conversations = showBlockedList ? blockedConvs : activeConvs;
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const { data: messages = [] } = useConversationMessages(selectedConvId);
   const { data: blocked = [] } = useBlockedUsers();
+
   const sendMsg = useSendMessageInConversation();
   const markRead = useMarkMessagesRead();
   const toggleBlock = useToggleBlock();
