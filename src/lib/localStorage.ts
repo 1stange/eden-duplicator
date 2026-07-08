@@ -218,7 +218,11 @@ export const adsStore = {
     const ad = this.byId(id);
     if (ad) this.update(id, { views: (ad.views || 0) + 1 });
   },
+  delete(id: string) {
+    set(KEYS.ADS, get<MockAd[]>(KEYS.ADS, []).filter((a) => a.id !== id));
+  },
 };
+
 
 // ---------- FAVORITES ----------
 export const favoritesStore = {
@@ -291,7 +295,14 @@ export const conversationsStore = {
     const c = convs.find((x) => x.id === conversationId);
     if (c) { c.updated_at = now(); set(KEYS.CONVERSATIONS, convs); }
   },
-  sendMessage(conversationId: string, senderId: string, content: string, opts?: { type?: "text" | "image" | "audio"; media?: string | null }): MockMessage {
+  sendMessage(conversationId: string, senderId: string, content: string, opts?: { type?: "text" | "image" | "audio"; media?: string | null }): MockMessage | { error: string } {
+    const conv = get<MockConversation[]>(KEYS.CONVERSATIONS, []).find((c) => c.id === conversationId);
+    if (conv) {
+      const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
+      // Block guard: either party blocked the other → no send
+      if (authStore.isBlocked(senderId, otherId)) return { error: "Vous avez bloqué cet utilisateur." };
+      if (authStore.isBlocked(otherId, senderId)) return { error: "Ce contact ne peut pas recevoir vos messages." };
+    }
     const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
     const m: MockMessage = {
       id: uid("msg"), conversation_id: conversationId, sender_id: senderId,
@@ -302,8 +313,6 @@ export const conversationsStore = {
     set(KEYS.MESSAGES, msgs);
     this.touch(conversationId);
 
-    // Add notification to the other participant
-    const conv = get<MockConversation[]>(KEYS.CONVERSATIONS, []).find((c) => c.id === conversationId);
     if (conv) {
       const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
       const sender = authStore.getProfile(senderId);
@@ -317,6 +326,7 @@ export const conversationsStore = {
     }
     return m;
   },
+
   markRead(conversationId: string, currentUserId: string) {
     const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
     let changed = false;
@@ -356,18 +366,27 @@ export const reportsStore = {
   },
   add(report: { ad_id: string; reporter_id: string; reason: string; details?: string }) {
     const all = get<any[]>(KEYS.REPORTS, []);
-    const r = { ...report, id: uid("rep"), status: "pending", reviewed_by: null, reviewed_at: null, created_at: now() };
+    const r = { ...report, id: uid("rep"), status: "pending", reviewed_by: null, reviewed_at: null, admin_notes: "", created_at: now() };
     all.unshift(r);
     set(KEYS.REPORTS, all);
     return r;
   },
-  update(reportId: string, status: string, reviewerId: string) {
+  update(reportId: string, patch: { status?: string; admin_notes?: string; reviewerId?: string }) {
     const all = get<any[]>(KEYS.REPORTS, []);
     const r = all.find((x) => x.id === reportId);
-    if (r) { r.status = status; r.reviewed_by = reviewerId; r.reviewed_at = now(); set(KEYS.REPORTS, all); }
+    if (r) {
+      if (patch.status !== undefined) r.status = patch.status;
+      if (patch.admin_notes !== undefined) r.admin_notes = patch.admin_notes;
+      if (patch.reviewerId) { r.reviewed_by = patch.reviewerId; r.reviewed_at = now(); }
+      set(KEYS.REPORTS, all);
+    }
     return r;
   },
+  remove(reportId: string) {
+    set(KEYS.REPORTS, get<any[]>(KEYS.REPORTS, []).filter((r) => r.id !== reportId));
+  },
 };
+
 
 // ---------- NOTIFICATIONS ----------
 export const notificationsStore = {

@@ -2,22 +2,28 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useConversations, useConversationMessages, useSendMessageInConversation,
-  useMarkMessagesRead, useBlockedUsers, useToggleBlock,
+  useMarkMessagesRead, useBlockedUsers, useToggleBlock, useBlockedConversations,
 } from "@/hooks/useLocalData";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import {
   MessageSquare, Send, Check, CheckCheck, ArrowLeft, Search,
   MoreVertical, Image as ImageIcon, Mic, Ban, X,
 } from "lucide-react";
 
+
 const TYPING_EVENT = "eden:typing";
 
 export default function Messages() {
   const { user } = useAuth();
-  const { data: conversations = [] } = useConversations();
+  const [showBlockedList, setShowBlockedList] = useState(false);
+  const { data: activeConvs = [] } = useConversations();
+  const { data: blockedConvs = [] } = useBlockedConversations();
+  const conversations = showBlockedList ? blockedConvs : activeConvs;
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const { data: messages = [] } = useConversationMessages(selectedConvId);
   const { data: blocked = [] } = useBlockedUsers();
+
   const sendMsg = useSendMessageInConversation();
   const markRead = useMarkMessagesRead();
   const toggleBlock = useToggleBlock();
@@ -87,9 +93,13 @@ export default function Messages() {
   const sendReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim() || !selectedConvId || isPartnerBlocked) return;
-    sendMsg.mutate({ conversationId: selectedConvId, content: reply.trim() });
+    sendMsg.mutate(
+      { conversationId: selectedConvId, content: reply.trim() },
+      { onError: (err: any) => toast({ title: "Message non envoyé", description: err?.message || "Erreur", variant: "destructive" }) },
+    );
     setReply("");
   };
+
 
   const handleAttachImage = async (file: File) => {
     if (!selectedConvId || isPartnerBlocked) return;
@@ -156,12 +166,19 @@ export default function Messages() {
         <div className="p-4 eden-gradient">
           <h1 className="text-lg font-display font-bold text-primary-foreground">Messages</h1>
         </div>
-        <div className="p-2 bg-card">
+        <div className="p-2 bg-card space-y-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Rechercher..." className="eden-input pl-10 h-9 text-sm bg-muted" />
           </div>
+          <div className="flex gap-1 text-xs">
+            <button onClick={() => { setShowBlockedList(false); setSelectedConvId(null); }} className={`flex-1 px-2 py-1.5 rounded-lg font-medium transition-colors ${!showBlockedList ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Actives ({activeConvs.length})</button>
+            <button onClick={() => { setShowBlockedList(true); setSelectedConvId(null); }} className={`flex-1 px-2 py-1.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-1 ${showBlockedList ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"}`}>
+              <Ban className="h-3 w-3" /> Bloqués ({blockedConvs.length})
+            </button>
+          </div>
         </div>
+
         <div className="flex-1 overflow-auto">
           {filteredConvs.length === 0 ? (
             <div className="text-center py-16">
