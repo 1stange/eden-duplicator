@@ -2,13 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useConversations, useConversationMessages, useSendMessageInConversation,
-  useMarkMessagesRead, useBlockedUsers, useToggleBlock,
+  useMarkMessagesRead, useBlockedUsers, useToggleBlock, useBlockedConversations,
 } from "@/hooks/useLocalData";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import {
   MessageSquare, Send, Check, CheckCheck, ArrowLeft, Search,
   MoreVertical, Image as ImageIcon, Mic, Ban, X,
 } from "lucide-react";
+
 
 const TYPING_EVENT = "eden:typing";
 
