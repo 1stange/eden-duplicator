@@ -7,9 +7,17 @@ import { useState } from "react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-accent/20 text-accent",
+  in_progress: "bg-eden-info/20 text-eden-info",
   reviewed: "bg-eden-success/20 text-eden-success",
   dismissed: "bg-muted text-muted-foreground",
 };
+const statusLabels: Record<string, string> = {
+  pending: "En attente",
+  in_progress: "À traiter",
+  reviewed: "Traité",
+  dismissed: "Rejeté",
+};
+
 
 const reasonLabels: Record<string, string> = {
   scam: "🚨 Arnaque",
