@@ -102,11 +102,36 @@ export function useToggleFavorite() {
 }
 
 // ============ CONVERSATIONS & MESSAGES ============
-export function useConversations() {
+export function useConversations(opts?: { includeBlocked?: boolean }) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["conversations", user?.id],
-    queryFn: async () => (user ? conversationsStore.forUser(user.id) : []),
+    queryKey: ["conversations", user?.id, opts?.includeBlocked ?? false],
+    queryFn: async () => {
+      if (!user) return [];
+      const convs = conversationsStore.forUser(user.id);
+      if (opts?.includeBlocked) return convs;
+      const blocked = authStore.getBlocked(user.id);
+      return convs.filter((c: any) => {
+        const other = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+        return !blocked.includes(other);
+      });
+    },
+    enabled: !!user,
+  });
+}
+
+export function useBlockedConversations() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["conversations-blocked", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const blocked = authStore.getBlocked(user.id);
+      return conversationsStore.forUser(user.id).filter((c: any) => {
+        const other = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+        return blocked.includes(other);
+      });
+    },
     enabled: !!user,
   });
 }
@@ -126,7 +151,9 @@ export function useSendMessage() {
     mutationFn: async ({ receiverId, adId, adTitle, content }: { receiverId: string; adId: string; adTitle: string; content: string }) => {
       if (!user) throw new Error("Not authenticated");
       const conv = conversationsStore.ensureConversation(user.id, receiverId, adId, adTitle);
-      return conversationsStore.sendMessage(conv.id, user.id, content);
+      const res = conversationsStore.sendMessage(conv.id, user.id, content);
+      if ("error" in (res as any)) throw new Error((res as any).error);
+      return res;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["conversations"] });
@@ -141,7 +168,9 @@ export function useSendMessageInConversation() {
   return useMutation({
     mutationFn: async ({ conversationId, content, type, media }: { conversationId: string; content: string; type?: "text" | "image" | "audio"; media?: string | null }) => {
       if (!user) throw new Error("Not authenticated");
-      return conversationsStore.sendMessage(conversationId, user.id, content, { type, media });
+      const res = conversationsStore.sendMessage(conversationId, user.id, content, { type, media });
+      if ("error" in (res as any)) throw new Error((res as any).error);
+      return res;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["conversations"] });
@@ -149,6 +178,7 @@ export function useSendMessageInConversation() {
     },
   });
 }
+
 
 export function useToggleBlock() {
   const qc = useQueryClient();
