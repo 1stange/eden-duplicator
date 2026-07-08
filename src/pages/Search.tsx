@@ -129,18 +129,38 @@ export default function SearchPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
               <label className="text-xs font-medium text-muted-foreground">Distance max : {maxDistance > 0 ? `${maxDistance} km` : "illimitée"}</label>
-              {!pos && (
+              {!pos && !geoDenied && (
                 <button type="button" onClick={requestGeo} className="text-[11px] text-primary hover:underline flex items-center gap-1">
                   <Navigation className="h-3 w-3" /> {geoLoading ? "Localisation…" : "Activer ma position"}
                 </button>
               )}
-              {pos && <span className="text-[11px] text-eden-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Position OK</span>}
+              {pos && !isFallback && <span className="text-[11px] text-eden-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Position GPS OK</span>}
+              {isFallback && fallbackCity && (
+                <span className="text-[11px] text-accent flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> Position estimée : {fallbackCity}
+                  <button type="button" onClick={clearFallback} className="ml-1 text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                </span>
+              )}
             </div>
             <input type="range" min={0} max={1500} step={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} disabled={!pos} className="w-full accent-primary disabled:opacity-50" />
-            {geoError && !pos && <p className="text-[10px] text-destructive mt-1">{geoError}</p>}
+            {(geoDenied || (geoError && !pos)) && (
+              <div className="mt-2 p-2 rounded-lg bg-muted/50 border border-border">
+                <p className="text-[11px] text-muted-foreground mb-1.5">
+                  {geoDenied ? "Position refusée. Choisissez une ville comme point de départ :" : "Impossible d'obtenir votre position. Choisissez une ville :"}
+                </p>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <select value={fallbackCity || ""} onChange={(e) => e.target.value && setFallback(e.target.value)} className="eden-input text-xs h-8 flex-1 min-w-[140px]">
+                    <option value="">— Sélectionner —</option>
+                    {CONGO_CITIES.filter((c) => CITY_COORDS[c]).map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  {geoDenied && <button type="button" onClick={requestGeo} className="text-[11px] text-primary hover:underline">Réessayer GPS</button>}
+                </div>
+              </div>
+            )}
           </div>
+
 
           {activeFilters > 0 && <button onClick={() => { setCategory(""); setCity(""); setCertifiedOnly(false); setPriceMin(""); setPriceMax(""); setMaxDistance(0); }} className="text-xs text-primary hover:underline">Effacer tous les filtres</button>}
         </div>
