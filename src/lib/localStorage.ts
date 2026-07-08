@@ -362,18 +362,27 @@ export const reportsStore = {
   },
   add(report: { ad_id: string; reporter_id: string; reason: string; details?: string }) {
     const all = get<any[]>(KEYS.REPORTS, []);
-    const r = { ...report, id: uid("rep"), status: "pending", reviewed_by: null, reviewed_at: null, created_at: now() };
+    const r = { ...report, id: uid("rep"), status: "pending", reviewed_by: null, reviewed_at: null, admin_notes: "", created_at: now() };
     all.unshift(r);
     set(KEYS.REPORTS, all);
     return r;
   },
-  update(reportId: string, status: string, reviewerId: string) {
+  update(reportId: string, patch: { status?: string; admin_notes?: string; reviewerId?: string }) {
     const all = get<any[]>(KEYS.REPORTS, []);
     const r = all.find((x) => x.id === reportId);
-    if (r) { r.status = status; r.reviewed_by = reviewerId; r.reviewed_at = now(); set(KEYS.REPORTS, all); }
+    if (r) {
+      if (patch.status !== undefined) r.status = patch.status;
+      if (patch.admin_notes !== undefined) r.admin_notes = patch.admin_notes;
+      if (patch.reviewerId) { r.reviewed_by = patch.reviewerId; r.reviewed_at = now(); }
+      set(KEYS.REPORTS, all);
+    }
     return r;
   },
+  remove(reportId: string) {
+    set(KEYS.REPORTS, get<any[]>(KEYS.REPORTS, []).filter((r) => r.id !== reportId));
+  },
 };
+
 
 // ---------- NOTIFICATIONS ----------
 export const notificationsStore = {
