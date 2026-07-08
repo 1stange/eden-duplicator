@@ -258,10 +258,13 @@ export function useUpdateReport() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ reportId, status, adStatus }: { reportId: string; status: string; adStatus?: string }) => {
+    mutationFn: async ({ reportId, status, adStatus, adminNotes, deleteAd }: { reportId: string; status?: string; adStatus?: string; adminNotes?: string; deleteAd?: boolean }) => {
       if (!user) throw new Error("Not authenticated");
-      const r = reportsStore.update(reportId, status, user.id);
-      if (adStatus && r) adsStore.update(r.ad_id, { status: adStatus as any });
+      const r = reportsStore.update(reportId, { status, admin_notes: adminNotes, reviewerId: status ? user.id : undefined });
+      if (r) {
+        if (adStatus) adsStore.update(r.ad_id, { status: adStatus as any });
+        if (deleteAd) adsStore.delete(r.ad_id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["reports"] });
@@ -270,6 +273,15 @@ export function useUpdateReport() {
     },
   });
 }
+
+export function useDeleteReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (reportId: string) => { reportsStore.remove(reportId); },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
 
 // ============ NOTIFICATIONS ============
 export function useNotifications() {
