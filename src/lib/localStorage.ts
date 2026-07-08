@@ -218,7 +218,11 @@ export const adsStore = {
     const ad = this.byId(id);
     if (ad) this.update(id, { views: (ad.views || 0) + 1 });
   },
+  delete(id: string) {
+    set(KEYS.ADS, get<MockAd[]>(KEYS.ADS, []).filter((a) => a.id !== id));
+  },
 };
+
 
 // ---------- FAVORITES ----------
 export const favoritesStore = {
