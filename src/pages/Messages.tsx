@@ -93,9 +93,13 @@ export default function Messages() {
   const sendReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim() || !selectedConvId || isPartnerBlocked) return;
-    sendMsg.mutate({ conversationId: selectedConvId, content: reply.trim() });
+    sendMsg.mutate(
+      { conversationId: selectedConvId, content: reply.trim() },
+      { onError: (err: any) => toast({ title: "Message non envoyé", description: err?.message || "Erreur", variant: "destructive" }) },
+    );
     setReply("");
   };
+
 
   const handleAttachImage = async (file: File) => {
     if (!selectedConvId || isPartnerBlocked) return;
