@@ -44,9 +44,14 @@ export default function Admin() {
   const { data: allAds = [] } = useAllAds();
   const { data: allProfiles = [] } = useAllProfiles();
   const updateReport = useUpdateReport();
+  const deleteReport = useDeleteReport();
   const updateAdStatus = useUpdateAdStatus();
   const certifyUser = useCertifyUser();
   const [activeTab, setActiveTab] = useState<"reports" | "users">("reports");
+  const [reportFilter, setReportFilter] = useState<"pending" | "in_progress" | "reviewed" | "dismissed" | "all">("pending");
+  const [expandedReport, setExpandedReport] = useState<string | null>(null);
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+
 
   if (!isAdmin) {
     return (
