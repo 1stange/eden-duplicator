@@ -37,7 +37,7 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState<"recent" | "price-asc" | "price-desc" | "distance">("recent");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
-  const { pos, error: geoError, loading: geoLoading, request: requestGeo } = useGeolocation();
+  const { pos, error: geoError, loading: geoLoading, denied: geoDenied, isFallback, fallbackCity, request: requestGeo, setFallback, clearFallback } = useGeolocation();
   const { data: allAds = [] } = useAds({ category: category || undefined, city: city || undefined, query: query || undefined });
   const { data: favs = [] } = useFavorites();
   const { data: profiles = [] } = useAllProfiles();
