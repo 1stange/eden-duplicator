@@ -291,7 +291,14 @@ export const conversationsStore = {
     const c = convs.find((x) => x.id === conversationId);
     if (c) { c.updated_at = now(); set(KEYS.CONVERSATIONS, convs); }
   },
-  sendMessage(conversationId: string, senderId: string, content: string, opts?: { type?: "text" | "image" | "audio"; media?: string | null }): MockMessage {
+  sendMessage(conversationId: string, senderId: string, content: string, opts?: { type?: "text" | "image" | "audio"; media?: string | null }): MockMessage | { error: string } {
+    const conv = get<MockConversation[]>(KEYS.CONVERSATIONS, []).find((c) => c.id === conversationId);
+    if (conv) {
+      const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
+      // Block guard: either party blocked the other → no send
+      if (authStore.isBlocked(senderId, otherId)) return { error: "Vous avez bloqué cet utilisateur." };
+      if (authStore.isBlocked(otherId, senderId)) return { error: "Ce contact ne peut pas recevoir vos messages." };
+    }
     const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
     const m: MockMessage = {
       id: uid("msg"), conversation_id: conversationId, sender_id: senderId,
@@ -302,8 +309,6 @@ export const conversationsStore = {
     set(KEYS.MESSAGES, msgs);
     this.touch(conversationId);
 
-    // Add notification to the other participant
-    const conv = get<MockConversation[]>(KEYS.CONVERSATIONS, []).find((c) => c.id === conversationId);
     if (conv) {
       const otherId = conv.participant_1 === senderId ? conv.participant_2 : conv.participant_1;
       const sender = authStore.getProfile(senderId);
@@ -317,6 +322,7 @@ export const conversationsStore = {
     }
     return m;
   },
+
   markRead(conversationId: string, currentUserId: string) {
     const msgs = get<MockMessage[]>(KEYS.MESSAGES, []);
     let changed = false;
