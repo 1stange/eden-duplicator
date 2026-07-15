@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+
+// Mock lottie-react to avoid lottie-web accessing canvas in jsdom
+vi.mock("lottie-react", () => ({
+  default: ({ animationData }: { animationData: unknown }) => (
+    <div data-testid="lottie-ready-mock">{animationData ? "ok" : "empty"}</div>
+  ),
+}));
+
 import { LottieUrl } from "@/components/LottieUrl";
 
 describe("LottieUrl", () => {
