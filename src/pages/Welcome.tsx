@@ -8,15 +8,30 @@ import {
 
 // Public JSON Lottie animations (assetsN.lottiefiles.com — 200 OK)
 const LOTTIES = {
-  hero: "https://assets2.lottiefiles.com/packages/lf20_iv4dsx3q.json", // hearts / love
-  chat: "https://assets9.lottiefiles.com/packages/lf20_yr6zz3wv.json", // chat bubbles
-  secure: "https://assets1.lottiefiles.com/packages/lf20_gjmecwii.json", // shield
-  rocket: "https://assets9.lottiefiles.com/packages/lf20_touohxv0.json", // rocket
-  world: "https://assets9.lottiefiles.com/packages/lf20_qp1q7mct.json", // globe
-  celebrate: "https://assets9.lottiefiles.com/packages/lf20_puciaact.json", // celebrate
-  wave: "https://assets9.lottiefiles.com/packages/lf20_khzniaya.json", // wave
-  stars: "https://assets9.lottiefiles.com/packages/lf20_zw0djhar.json", // stars
+  hero: "https://assets3.lottiefiles.com/packages/lf20_kkflmtur.json", // couple / romance
+  chat: "https://assets10.lottiefiles.com/packages/lf20_u4yrau.json", // chat mobile
+  secure: "https://assets1.lottiefiles.com/packages/lf20_gjmecwii.json",
+  rocket: "https://assets9.lottiefiles.com/packages/lf20_touohxv0.json",
+  world: "https://assets9.lottiefiles.com/packages/lf20_qp1q7mct.json",
+  celebrate: "https://assets9.lottiefiles.com/packages/lf20_puciaact.json",
+  wave: "https://assets9.lottiefiles.com/packages/lf20_khzniaya.json",
+  stars: "https://assets9.lottiefiles.com/packages/lf20_zw0djhar.json",
 };
+
+const HeroFallback = () => (
+  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10">
+    <div className="text-center">
+      <Flame className="h-24 w-24 text-primary mx-auto animate-pulse" />
+      <p className="mt-2 text-sm font-display font-bold text-foreground">Eden Congo</p>
+    </div>
+  </div>
+);
+
+const ChatFallback = () => (
+  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/20 to-primary/10">
+    <MessageCircleHeart className="h-20 w-20 text-primary animate-pulse" />
+  </div>
+);
 
 const FEATURES = [
   { icon: Flame, title: "Rencontres discrètes", desc: "Trouvez des profils vérifiés près de vous, en toute confidentialité.", color: "from-primary/20 to-primary/5" },
@@ -124,7 +139,7 @@ export default function Welcome() {
             className="relative"
           >
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 via-accent/10 to-background border border-border shadow-2xl aspect-square max-w-md mx-auto">
-              <LottieUrl src={LOTTIES.hero} className="w-full h-full" />
+              <LottieUrl src={LOTTIES.hero} className="w-full h-full" fallback={<HeroFallback />} />
               <div className="absolute top-4 right-4 w-20 h-20 pointer-events-none">
                 <LottieUrl src={LOTTIES.stars} className="w-full h-full" />
               </div>
@@ -192,7 +207,7 @@ export default function Welcome() {
       <section className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-10 items-center">
         <motion.div {...fadeUp} className="order-2 md:order-1">
           <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-accent/10 to-primary/5 border border-border aspect-square max-w-sm mx-auto p-4">
-            <LottieUrl src={LOTTIES.chat} className="w-full h-full" />
+            <LottieUrl src={LOTTIES.chat} className="w-full h-full" fallback={<ChatFallback />} />
           </div>
         </motion.div>
         <motion.div {...fadeUp} className="order-1 md:order-2">

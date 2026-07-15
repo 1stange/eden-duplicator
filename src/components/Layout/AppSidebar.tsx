@@ -63,7 +63,8 @@ export function AppSidebar() {
   const isEntreprise = userRole === "entreprise";
 
   // Build navigation based on role
-  const mainItems = [...commonNav, publishItem];
+  // Admins cannot publish ads — moderation-only role
+  const mainItems = isAdmin ? [...commonNav] : [...commonNav, publishItem];
   const personalNav = isEntreprise ? entrepriseItems : particulierItems;
   const moreNav = isEntreprise ? moreEntreprise : moreParticulier;
 
