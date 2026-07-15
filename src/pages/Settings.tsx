@@ -27,9 +27,10 @@ function savePrefs(prefs: Record<string, any>) {
 
 export default function Settings() {
   const { theme, toggleTheme, accent, setAccent } = useTheme();
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, updateProfile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const isSeller = user?.role === "entreprise" || isAdmin;
   const [prefs, setPrefs] = useState<Record<string, any>>(loadPrefs());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newEmail, setNewEmail] = useState(user?.email || "");
@@ -162,18 +163,24 @@ export default function Settings() {
         <Section title="Notifications" icon={<Bell className="h-4 w-4" />}>
           <Row icon={<Mail className="h-4 w-4 text-primary" />} title="Nouveaux messages" subtitle="Notification quand vous recevez un message"
             action={<Switch on={prefs.notif_messages !== false} onClick={() => toggle("notif_messages")} />} />
-          <Row icon={<Eye className="h-4 w-4 text-primary" />} title="Vues sur vos annonces" subtitle="Recevoir un récap des vues"
-            action={<Switch on={!!prefs.notif_views} onClick={() => toggle("notif_views")} />} />
+          {isSeller && (
+            <Row icon={<Eye className="h-4 w-4 text-primary" />} title="Vues sur vos annonces" subtitle="Recevoir un récap des vues"
+              action={<Switch on={!!prefs.notif_views} onClick={() => toggle("notif_views")} />} />
+          )}
           <Row icon={<Smartphone className="h-4 w-4 text-primary" />} title="Marketing et promotions" subtitle="Offres et nouveautés Eden"
             action={<Switch on={!!prefs.notif_marketing} onClick={() => toggle("notif_marketing")} />} />
         </Section>
 
         {/* Privacy */}
         <Section title="Confidentialité" icon={<Lock className="h-4 w-4" />}>
-          <Row icon={<Eye className="h-4 w-4 text-primary" />} title="Afficher mon téléphone" subtitle="Visible sur les annonces"
-            action={<Switch on={prefs.privacy_phone !== false} onClick={() => toggle("privacy_phone")} />} />
-          <Row icon={<Mail className="h-4 w-4 text-primary" />} title="Afficher mon email" subtitle="Visible publiquement"
-            action={<Switch on={!!prefs.privacy_email} onClick={() => toggle("privacy_email")} />} />
+          {isSeller && (
+            <>
+              <Row icon={<Eye className="h-4 w-4 text-primary" />} title="Afficher mon téléphone" subtitle="Visible sur les annonces"
+                action={<Switch on={prefs.privacy_phone !== false} onClick={() => toggle("privacy_phone")} />} />
+              <Row icon={<Mail className="h-4 w-4 text-primary" />} title="Afficher mon email" subtitle="Visible publiquement"
+                action={<Switch on={!!prefs.privacy_email} onClick={() => toggle("privacy_email")} />} />
+            </>
+          )}
           <Row icon={<MapPin className="h-4 w-4 text-primary" />} title="Statut en ligne" subtitle="Afficher quand vous êtes connecté"
             action={<Switch on={prefs.privacy_online !== false} onClick={() => toggle("privacy_online")} />} />
         </Section>
