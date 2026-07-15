@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateAd } from "@/hooks/useLocalData";
@@ -8,7 +8,7 @@ import { ArrowLeft, ImagePlus, Send, X, Camera, Video } from "lucide-react";
 
 export default function Publish() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const createAd = useCreateAd();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -25,7 +25,11 @@ export default function Publish() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  if (!user) return null;
+  useEffect(() => {
+    if (isAdmin) navigate("/", { replace: true });
+  }, [isAdmin, navigate]);
+
+  if (!user || isAdmin) return null;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
