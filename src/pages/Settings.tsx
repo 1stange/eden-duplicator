@@ -191,7 +191,7 @@ export default function Settings() {
             action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={() => alert("Fonctionnalité bientôt disponible")} />
           <Row icon={<EyeOff className="h-4 w-4 text-primary" />} title="Authentification à 2 facteurs" subtitle="Sécurité renforcée"
             action={<span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Bientôt</span>} />
-          {!((user as any)?.is_certified) && (
+          {isSeller && !((user as any)?.is_certified) && (
             <Row icon={<BadgeCheck className="h-4 w-4 text-eden-success" />} title="Demander la certification" subtitle="Obtenez le badge vert vérifié"
               action={<ChevronRight className="h-4 w-4 text-muted-foreground" />} onClick={() => alert("Demande de certification envoyée à l'équipe Eden.")} />
           )}
