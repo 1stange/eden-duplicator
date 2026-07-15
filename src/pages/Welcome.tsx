@@ -1,33 +1,37 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { LottieUrl } from "@/components/LottieUrl";
 import {
-  Heart, Shield, MessageSquare, Sparkles, MapPin, BadgeCheck,
-  ArrowRight, ChevronDown, Star,
+  Flame, ShieldCheck, MessageCircleHeart, Sparkles, Compass, BadgeCheck,
+  ArrowRight, ChevronDown, Star, Lock, Zap, Globe2, Users, TrendingUp, Rocket,
 } from "lucide-react";
 
-// Public dotLottie files hosted on lottie.host (no auth required)
+// Public JSON Lottie animations (assetsN.lottiefiles.com — 200 OK)
 const LOTTIES = {
-  hero: "https://lottie.host/4d42d6cf-5cb0-4b6f-a5c9-f96f3fddb912/qOK4XkKn9C.lottie",
-  chat: "https://lottie.host/dea6c9f0-9f83-4c02-b6a4-2ab7f0d3d0f4/n7Y6b3q2y2.lottie",
-  secure: "https://lottie.host/8f9a3b2c-6d1e-4d7a-9f4e-1c8b2d3e4f5a/lNSJvY4hbP.lottie",
-  city: "https://lottie.host/1a2b3c4d-5e6f-7890-abcd-ef1234567890/heroCity.lottie",
+  hero: "https://assets2.lottiefiles.com/packages/lf20_iv4dsx3q.json", // hearts / love
+  chat: "https://assets9.lottiefiles.com/packages/lf20_yr6zz3wv.json", // chat bubbles
+  secure: "https://assets1.lottiefiles.com/packages/lf20_gjmecwii.json", // shield
+  rocket: "https://assets9.lottiefiles.com/packages/lf20_touohxv0.json", // rocket
+  world: "https://assets9.lottiefiles.com/packages/lf20_qp1q7mct.json", // globe
+  celebrate: "https://assets9.lottiefiles.com/packages/lf20_puciaact.json", // celebrate
+  wave: "https://assets9.lottiefiles.com/packages/lf20_khzniaya.json", // wave
+  stars: "https://assets9.lottiefiles.com/packages/lf20_zw0djhar.json", // stars
 };
 
 const FEATURES = [
-  { icon: Heart, title: "Rencontres discrètes", desc: "Trouvez des profils vérifiés près de vous, en toute confidentialité.", color: "from-primary/20 to-primary/5" },
-  { icon: MapPin, title: "Toutes les villes du Congo", desc: "Brazzaville, Pointe-Noire, Dolisie… la plateforme couvre tout le territoire.", color: "from-accent/20 to-accent/5" },
+  { icon: Flame, title: "Rencontres discrètes", desc: "Trouvez des profils vérifiés près de vous, en toute confidentialité.", color: "from-primary/20 to-primary/5" },
+  { icon: Compass, title: "Toutes les villes du Congo", desc: "Brazzaville, Pointe-Noire, Dolisie… la plateforme couvre tout le territoire.", color: "from-accent/20 to-accent/5" },
   { icon: BadgeCheck, title: "Comptes certifiés", desc: "Un badge officiel pour les profils vérifiés. Fini les faux profils.", color: "from-eden-success/20 to-eden-success/5" },
-  { icon: MessageSquare, title: "Chat sécurisé", desc: "Messagerie style WhatsApp, chiffrée côté client. Bloquez qui vous voulez.", color: "from-eden-info/20 to-eden-info/5" },
-  { icon: Shield, title: "Modération 24/7", desc: "Signalements traités rapidement. Contenus illégaux immédiatement retirés.", color: "from-destructive/20 to-destructive/5" },
-  { icon: Sparkles, title: "Boost premium", desc: "Mettez en avant vos annonces pour toucher plus de monde.", color: "from-primary/20 to-accent/10" },
+  { icon: MessageCircleHeart, title: "Chat sécurisé", desc: "Messagerie style WhatsApp, chiffrée côté client. Bloquez qui vous voulez.", color: "from-eden-info/20 to-eden-info/5" },
+  { icon: ShieldCheck, title: "Modération 24/7", desc: "Signalements traités rapidement. Contenus illégaux immédiatement retirés.", color: "from-destructive/20 to-destructive/5" },
+  { icon: Rocket, title: "Boost premium", desc: "Mettez en avant vos annonces pour toucher plus de monde.", color: "from-primary/20 to-accent/10" },
 ];
 
 const STATS = [
-  { value: "10k+", label: "Membres actifs" },
-  { value: "15", label: "Villes couvertes" },
-  { value: "24/7", label: "Modération" },
-  { value: "100%", label: "Discret" },
+  { icon: Users, value: "10k+", label: "Membres actifs" },
+  { icon: Globe2, value: "15", label: "Villes couvertes" },
+  { icon: Zap, value: "24/7", label: "Modération" },
+  { icon: Lock, value: "100%", label: "Discret" },
 ];
 
 const TESTIMONIALS = [
@@ -54,7 +58,7 @@ export default function Welcome() {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl eden-gradient flex items-center justify-center">
-              <span className="text-lg">🌿</span>
+              <Flame className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-display font-bold text-lg text-foreground">Eden</span>
           </div>
@@ -77,7 +81,7 @@ export default function Welcome() {
         <div className="max-w-6xl mx-auto px-4 pt-14 pb-20 grid md:grid-cols-2 gap-8 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-              🔞 Réservé aux 18+ · 100% discret
+              <Lock className="h-3 w-3" /> Réservé aux 18+ · 100% discret
             </span>
             <h1 className="mt-4 text-4xl md:text-6xl font-display font-black leading-[1.05] text-foreground">
               Rencontres & services{" "}
@@ -120,11 +124,14 @@ export default function Welcome() {
             className="relative"
           >
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 via-accent/10 to-background border border-border shadow-2xl aspect-square max-w-md mx-auto">
-              <DotLottieReact src={LOTTIES.hero} loop autoplay style={{ width: "100%", height: "100%" }} />
+              <LottieUrl src={LOTTIES.hero} className="w-full h-full" />
+              <div className="absolute top-4 right-4 w-20 h-20 pointer-events-none">
+                <LottieUrl src={LOTTIES.stars} className="w-full h-full" />
+              </div>
               <div className="absolute bottom-4 left-4 right-4 bg-card/90 backdrop-blur-md rounded-2xl p-3 border border-border shadow-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full eden-gradient flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-primary-foreground" />
+                    <MessageCircleHeart className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground">Nouveau match 💕</p>
@@ -148,6 +155,7 @@ export default function Welcome() {
           {STATS.map((s, i) => (
             <motion.div key={s.label} {...fadeUp} transition={{ duration: 0.4, delay: i * 0.08 }}
               className="eden-card p-5 text-center bg-gradient-to-br from-primary/5 to-transparent">
+              <s.icon className="h-5 w-5 text-primary mx-auto mb-2" />
               <p className="text-3xl md:text-4xl font-display font-black bg-gradient-to-b from-primary to-accent bg-clip-text text-transparent">{s.value}</p>
               <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
             </motion.div>
@@ -162,6 +170,9 @@ export default function Welcome() {
           <h2 className="text-3xl md:text-4xl font-display font-black text-foreground mt-2">
             Une plateforme pensée pour vous.
           </h2>
+          <div className="w-40 h-40 mx-auto mt-4">
+            <LottieUrl src={LOTTIES.wave} className="w-full h-full" />
+          </div>
         </motion.div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((f, i) => (
@@ -177,11 +188,11 @@ export default function Welcome() {
         </div>
       </section>
 
-      {/* SPLIT WITH LOTTIE */}
+      {/* SPLIT WITH LOTTIE — CHAT */}
       <section className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-10 items-center">
         <motion.div {...fadeUp} className="order-2 md:order-1">
-          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-accent/10 to-primary/5 border border-border aspect-square max-w-sm mx-auto">
-            <DotLottieReact src={LOTTIES.chat} loop autoplay style={{ width: "100%", height: "100%" }} />
+          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-accent/10 to-primary/5 border border-border aspect-square max-w-sm mx-auto p-4">
+            <LottieUrl src={LOTTIES.chat} className="w-full h-full" />
           </div>
         </motion.div>
         <motion.div {...fadeUp} className="order-1 md:order-2">
@@ -190,15 +201,50 @@ export default function Welcome() {
           </h2>
           <p className="mt-4 text-muted-foreground">
             Indicateur "en train d'écrire", accusés de lecture, partage d'images et de vocaux,
-            et blocage utilisateur en un clic. Votre historique reste privé même en cas de blocage.
+            et blocage utilisateur en un clic.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-foreground">
-            {["Chiffrement local", "Vocaux 5 s", "Blocage bidirectionnel", "Bannière si utilisateur bloqué"].map((x) => (
-              <li key={x} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" /> {x}
+            {[
+              { icon: Lock, txt: "Chiffrement local" },
+              { icon: Zap, txt: "Vocaux 5 s" },
+              { icon: ShieldCheck, txt: "Blocage bidirectionnel" },
+              { icon: BadgeCheck, txt: "Bannière si utilisateur bloqué" },
+            ].map((x) => (
+              <li key={x.txt} className="flex items-center gap-2">
+                <x.icon className="h-4 w-4 text-primary" /> {x.txt}
               </li>
             ))}
           </ul>
+        </motion.div>
+      </section>
+
+      {/* SPLIT WITH LOTTIE — SECURE */}
+      <section className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-10 items-center">
+        <motion.div {...fadeUp}>
+          <h2 className="text-3xl md:text-4xl font-display font-black text-foreground">
+            Votre <span className="text-primary">sécurité</span>, notre priorité.
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Modération humaine, badge certifié attribué manuellement par un admin, signalements en un clic.
+            Vos données restent sur votre appareil.
+          </p>
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            {[
+              { icon: ShieldCheck, label: "Modéré" },
+              { icon: BadgeCheck, label: "Certifié" },
+              { icon: TrendingUp, label: "Sécurisé" },
+            ].map((b) => (
+              <div key={b.label} className="eden-card p-3 flex flex-col items-center gap-1">
+                <b.icon className="h-5 w-5 text-primary" />
+                <span className="text-[11px] text-muted-foreground">{b.label}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+        <motion.div {...fadeUp}>
+          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 to-accent/5 border border-border aspect-square max-w-sm mx-auto p-4">
+            <LottieUrl src={LOTTIES.secure} className="w-full h-full" />
+          </div>
         </motion.div>
       </section>
 
@@ -254,10 +300,14 @@ export default function Welcome() {
       {/* CTA */}
       <section className="max-w-4xl mx-auto px-4 py-16">
         <motion.div {...fadeUp} className="relative overflow-hidden rounded-3xl eden-gradient p-10 md:p-14 text-center shadow-2xl">
-          <div className="absolute inset-0 opacity-20">
-            <DotLottieReact src={LOTTIES.secure} loop autoplay style={{ width: "100%", height: "100%" }} />
+          <div className="absolute inset-0 opacity-30 pointer-events-none">
+            <LottieUrl src={LOTTIES.celebrate} className="w-full h-full" />
+          </div>
+          <div className="absolute -top-4 -right-4 w-32 h-32 opacity-70 pointer-events-none">
+            <LottieUrl src={LOTTIES.rocket} className="w-full h-full" />
           </div>
           <div className="relative">
+            <Sparkles className="h-8 w-8 text-primary-foreground mx-auto mb-2" />
             <h2 className="text-3xl md:text-4xl font-display font-black text-primary-foreground">
               Prêt à rejoindre Eden ?
             </h2>
@@ -273,8 +323,11 @@ export default function Welcome() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
+        <div className="w-16 h-16 mx-auto mb-2">
+          <LottieUrl src={LOTTIES.world} className="w-full h-full" />
+        </div>
         <p>© {new Date().getFullYear()} Eden Congo · Réservé aux adultes 18+</p>
-        <p className="mt-1">Fait avec ❤️ à Brazzaville.</p>
+        <p className="mt-1 flex items-center justify-center gap-1">Fait avec <Flame className="h-3 w-3 text-primary inline" /> à Brazzaville.</p>
       </footer>
     </div>
   );
