@@ -15,6 +15,13 @@ export default function Analytics() {
   const { data: conversations = [] } = useConversations();
 
   const isSeller = !isAdmin;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sortedUserAds = useMemo(
+    () => [...userAds].sort((a: any, b: any) => (b.created_at || 0) - (a.created_at || 0) || (b.views || 0) - (a.views || 0)),
+    [userAds]
+  );
+  const visibleAds = sortedUserAds.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedUserAds.length;
 
   const stats = useMemo(() => {
     const totalViews = userAds.reduce((sum: number, a: any) => sum + (a.views || 0), 0);
