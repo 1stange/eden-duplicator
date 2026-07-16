@@ -25,6 +25,21 @@ import { RealtimeNotifications } from "./components/RealtimeNotifications";
 
 const queryClient = new QueryClient();
 
+/**
+ * Route guard: prevents admin accounts from reaching seller-only routes such as /publish,
+ * even when the URL is typed manually or reached from an external link. This is the
+ * strongest enforcement possible in a client-only app (no backend); it also mirrors what
+ * a server-side middleware would do so the behavior stays consistent once a backend is
+ * reintroduced.
+ */
+function NonAdminRoute({ children }: { children: JSX.Element }) {
+  const { isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (isAdmin) return <Navigate to="/" replace />;
+  return children;
+}
+
+
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
@@ -68,7 +83,7 @@ function AppRoutes() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/publish" element={<Publish />} />
+        <Route path="/publish" element={<NonAdminRoute><Publish /></NonAdminRoute>} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />

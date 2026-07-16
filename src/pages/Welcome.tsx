@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LottieUrl } from "@/components/LottieUrl";
+import { LottieUrl, preloadLotties } from "@/components/LottieUrl";
 import {
   Flame, ShieldCheck, MessageCircleHeart, Sparkles, Compass, BadgeCheck,
   ArrowRight, ChevronDown, Star, Lock, Zap, Globe2, Users, TrendingUp, Rocket,
@@ -65,6 +66,12 @@ const fadeUp = {
 export default function Welcome() {
   const navigate = useNavigate();
   const go = () => navigate("/auth");
+
+  // Preload every Lottie the landing uses so scroll sections don't flash the skeleton.
+  useEffect(() => {
+    preloadLotties(Object.values(LOTTIES));
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAds, useUserAds, useFavorites, useConversations } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
-import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users, ChevronRight, PlusCircle, Package } from "lucide-react";
+import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users, ChevronRight, PlusCircle, Package, Loader2 } from "lucide-react";
+
+const PAGE_SIZE = 10;
 
 export default function Analytics() {
   const { user, isAdmin } = useAuth();
@@ -13,6 +15,13 @@ export default function Analytics() {
   const { data: conversations = [] } = useConversations();
 
   const isSeller = !isAdmin;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sortedUserAds = useMemo(
+    () => [...userAds].sort((a: any, b: any) => (b.created_at || 0) - (a.created_at || 0) || (b.views || 0) - (a.views || 0)),
+    [userAds]
+  );
+  const visibleAds = sortedUserAds.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedUserAds.length;
 
   const stats = useMemo(() => {
     const totalViews = userAds.reduce((sum: number, a: any) => sum + (a.views || 0), 0);
@@ -64,7 +73,7 @@ export default function Analytics() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {userAds.map((ad: any) => (
+              {visibleAds.map((ad: any) => (
                 <Link
                   key={ad.id}
                   to={`/ad/${ad.id}`}
@@ -73,6 +82,8 @@ export default function Analytics() {
                   <img
                     src={ad.images?.[0] || "/placeholder.svg"}
                     alt={ad.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-14 h-14 rounded-lg object-cover shrink-0"
                   />
                   <div className="flex-1 min-w-0">
@@ -89,10 +100,27 @@ export default function Analytics() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </Link>
               ))}
+              {hasMore && (
+                <div className="pt-3 flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold border border-border text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Loader2 className="h-3.5 w-3.5" /> Charger plus ({sortedUserAds.length - visibleCount} restantes)
+                  </button>
+                </div>
+              )}
+              {!hasMore && sortedUserAds.length > PAGE_SIZE && (
+                <p className="pt-3 text-center text-[11px] text-muted-foreground">
+                  {sortedUserAds.length} annonces au total.
+                </p>
+              )}
             </div>
           )}
         </div>
       )}
+
 
       <div className="eden-card p-4 mb-6">
         <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Par catégorie</h2>
