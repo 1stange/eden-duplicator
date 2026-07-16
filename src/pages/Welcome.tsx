@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LottieUrl } from "@/components/LottieUrl";
+import { LottieUrl, preloadLotties } from "@/components/LottieUrl";
 import {
   Flame, ShieldCheck, MessageCircleHeart, Sparkles, Compass, BadgeCheck,
   ArrowRight, ChevronDown, Star, Lock, Zap, Globe2, Users, TrendingUp, Rocket,
