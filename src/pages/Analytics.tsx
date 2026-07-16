@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAds, useUserAds, useFavorites, useConversations } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
-import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users, ChevronRight, PlusCircle, Package } from "lucide-react";
+import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users, ChevronRight, PlusCircle, Package, Loader2 } from "lucide-react";
+
+const PAGE_SIZE = 10;
 
 export default function Analytics() {
   const { user, isAdmin } = useAuth();
