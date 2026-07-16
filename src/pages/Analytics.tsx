@@ -149,7 +149,7 @@ export default function Analytics() {
             {stats.topAds.slice(0, 5).map((ad: any, i: number) => (
               <Link key={ad.id} to={`/ad/${ad.id}`} className="flex items-center gap-3 hover:bg-muted/40 -mx-2 px-2 py-1 rounded-lg transition-colors">
                 <span className="text-sm font-bold text-muted-foreground w-6">#{i + 1}</span>
-                <img src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                <ProgressiveImage src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} wrapperClassName="w-10 h-10 rounded-lg shrink-0" className="w-10 h-10 object-cover rounded-lg" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{ad.title}</p>
                   <p className="text-xs text-muted-foreground">{ad.city}</p>
