@@ -67,6 +67,12 @@ export default function Welcome() {
   const navigate = useNavigate();
   const go = () => navigate("/auth");
 
+  // Preload every Lottie the landing uses so scroll sections don't flash the skeleton.
+  useEffect(() => {
+    preloadLotties(Object.values(LOTTIES));
+  }, []);
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky nav */}
