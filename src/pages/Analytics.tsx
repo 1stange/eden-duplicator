@@ -80,12 +80,11 @@ export default function Analytics() {
                   to={`/ad/${ad.id}`}
                   className="flex items-center gap-3 py-3 hover:bg-muted/40 -mx-2 px-2 rounded-lg transition-colors"
                 >
-                  <img
+                  <ProgressiveImage
                     src={ad.images?.[0] || "/placeholder.svg"}
                     alt={ad.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-14 h-14 rounded-lg object-cover shrink-0"
+                    wrapperClassName="w-14 h-14 rounded-lg shrink-0"
+                    className="w-14 h-14 object-cover rounded-lg"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{ad.title}</p>
