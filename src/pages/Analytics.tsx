@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAds, useUserAds, useFavorites, useConversations } from "@/hooks/useLocalData";
 import { CATEGORIES } from "@/types";
 import { BarChart3, Eye, Heart, MessageSquare, TrendingUp, Users, ChevronRight, PlusCircle, Package, Loader2 } from "lucide-react";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 const PAGE_SIZE = 10;
 
