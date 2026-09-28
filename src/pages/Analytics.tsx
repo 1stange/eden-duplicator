@@ -83,6 +83,8 @@ export default function Analytics() {
                   <ProgressiveImage
                     src={ad.images?.[0] || "/placeholder.svg"}
                     alt={ad.title}
+                    responsiveWidths={[56, 84, 112]}
+                    sizes="56px"
                     wrapperClassName="w-14 h-14 rounded-lg shrink-0"
                     className="w-14 h-14 object-cover rounded-lg"
                   />
@@ -149,7 +151,14 @@ export default function Analytics() {
             {stats.topAds.slice(0, 5).map((ad: any, i: number) => (
               <Link key={ad.id} to={`/ad/${ad.id}`} className="flex items-center gap-3 hover:bg-muted/40 -mx-2 px-2 py-1 rounded-lg transition-colors">
                 <span className="text-sm font-bold text-muted-foreground w-6">#{i + 1}</span>
-                <ProgressiveImage src={ad.images?.[0] || "/placeholder.svg"} alt={ad.title} wrapperClassName="w-10 h-10 rounded-lg shrink-0" className="w-10 h-10 object-cover rounded-lg" />
+                <ProgressiveImage
+                  src={ad.images?.[0] || "/placeholder.svg"}
+                  alt={ad.title}
+                  responsiveWidths={[40, 80]}
+                  sizes="40px"
+                  wrapperClassName="w-10 h-10 rounded-lg shrink-0"
+                  className="w-10 h-10 object-cover rounded-lg"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{ad.title}</p>
                   <p className="text-xs text-muted-foreground">{ad.city}</p>
